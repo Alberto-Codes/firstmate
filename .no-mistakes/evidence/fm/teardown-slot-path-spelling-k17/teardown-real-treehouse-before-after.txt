@@ -1,0 +1,113 @@
+bin/fm-teardown.sh end-to-end against the REAL treehouse binary (v2.3.0)
+========================================================================
+Each block builds an origin + project clone, leases a slot from a real
+treehouse pool, commits and pushes the worker's landed work in that slot,
+records the slot in state/task-x1.meta exactly the way fm-spawn does (the
+pane's physically resolved cwd), and then runs the real bin/fm-teardown.sh.
+Only tmux/gh/gh-axi/no-mistakes are stubbed; treehouse and git are real.
+
+Pool-root shapes exercised:
+  symlinked-parent     pool reached through a symlinked parent - the bootc
+                       shape from the report (/home -> /var/home)
+  physical             pool root spelled physically (must not regress)
+  symlinked-pool-root  the pool root directory itself is a symlink onto
+                       another tree (~/.treehouse -> elsewhere)
+
+BEFORE the fix  (base commit e0d269e)
+====================================
+
+  recorded worktree= : /tmp/fm-th-e2e/case-before/real/pool/.treehouse/project-2b98d4/1/project
+  treehouse registered: /tmp/fm-th-e2e/case-before/link/pool/.treehouse/project-2b98d4/1/project
+  
+  $ bin/fm-teardown.sh task-x1   (fm root: /tmp/fm-base)
+  worktree /tmp/fm-th-e2e/case-before/real/pool/.treehouse/project-2b98d4/1/project is not managed by treehouse
+  error: treehouse return failed for worktree /tmp/fm-th-e2e/case-before/real/pool/.treehouse/project-2b98d4/1/project; teardown aborted
+  exit=1
+  
+  task meta still present? YES
+  treehouse status:
+    1     leased       /tmp/fm-th-e2e/case-before/link/pool/.treehouse/project-2b98d4/1/project  (held by firstmate)
+
+  ### pool-root shape   : physical   (TREEHOUSE_ROOT=/tmp/fm-th-e2e/before-physical/real/pool)
+  meta worktree=        : /tmp/fm-th-e2e/before-physical/real/pool/.treehouse/project-3a1af1/1/project
+  treehouse registered  : /tmp/fm-th-e2e/before-physical/real/pool/.treehouse/project-3a1af1/1/project
+  
+  $ bin/fm-teardown.sh task-x1      [fm root: /tmp/fm-base]
+    🌳 Worktree returned to pool.
+    /tmp/fm-th-e2e/before-physical/real/project: already current
+    teardown task-x1 complete (window firstmate:fm-task-x1, worktree /tmp/fm-th-e2e/before-physical/real/pool/.treehouse/project-3a1af1/1/project)
+    Backlog: task-x1 just finished (this home keeps no markdown backlog at /tmp/fm-th-e2e/before-physical/real/data/backlog.md). Update /tmp/fm-th-e2e/before-physical/real/data/backlog.md - move task-x1 to Done, keep Done to the 10 most recent, then re-scan Queued and dispatch only work whose blockers are gone and date is due.
+  exit=0
+  task meta after teardown: removed (teardown completed)
+  treehouse status:
+    1     available    /tmp/fm-th-e2e/before-physical/real/pool/.treehouse/project-3a1af1/1/project
+  
+  rc=0
+  ===========
+  ### pool-root shape   : symlinked-pool-root   (TREEHOUSE_ROOT=/tmp/fm-th-e2e/before-symlinked-pool-root/real/poolhome)
+  meta worktree=        : /tmp/fm-th-e2e/before-symlinked-pool-root/elsewhere/project-c4e1ed/1/project
+  treehouse registered  : /tmp/fm-th-e2e/before-symlinked-pool-root/real/poolhome/.treehouse/project-c4e1ed/1/project
+  
+  $ bin/fm-teardown.sh task-x1      [fm root: /tmp/fm-base]
+    worktree /tmp/fm-th-e2e/before-symlinked-pool-root/elsewhere/project-c4e1ed/1/project is not managed by treehouse
+    error: treehouse return failed for worktree /tmp/fm-th-e2e/before-symlinked-pool-root/elsewhere/project-c4e1ed/1/project; teardown aborted
+  exit=1
+  task meta after teardown: still present (teardown aborted)
+  treehouse status:
+    1     leased       /tmp/fm-th-e2e/before-symlinked-pool-root/real/poolhome/.treehouse/project-c4e1ed/1/project  (held by firstmate)
+  
+  rc=1
+  ===========
+
+
+AFTER the fix  (target commit 79a6188)
+======================================
+
+  ### pool-root shape   : symlinked-parent   (TREEHOUSE_ROOT=/tmp/fm-th-e2e/after-symlinked-parent/link/pool)
+  meta worktree=        : /tmp/fm-th-e2e/after-symlinked-parent/real/pool/.treehouse/project-34cc87/1/project
+  treehouse registered  : /tmp/fm-th-e2e/after-symlinked-parent/link/pool/.treehouse/project-34cc87/1/project
+  
+  $ bin/fm-teardown.sh task-x1      [fm root: /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M28J2SK29R6444KZA8VMA86R]
+    🌳 Worktree returned to pool.
+    /tmp/fm-th-e2e/after-symlinked-parent/real/project: already current
+    teardown task-x1 complete (window firstmate:fm-task-x1, worktree /tmp/fm-th-e2e/after-symlinked-parent/real/pool/.treehouse/project-34cc87/1/project)
+    Backlog: task-x1 just finished (this home keeps no markdown backlog at /tmp/fm-th-e2e/after-symlinked-parent/real/data/backlog.md). Update /tmp/fm-th-e2e/after-symlinked-parent/real/data/backlog.md - move task-x1 to Done, keep Done to the 10 most recent, then re-scan Queued and dispatch only work whose blockers are gone and date is due.
+  exit=0
+  task meta after teardown: removed (teardown completed)
+  treehouse status:
+    1     available    /tmp/fm-th-e2e/after-symlinked-parent/link/pool/.treehouse/project-34cc87/1/project
+  
+  rc=0
+  ======================================================
+  ### pool-root shape   : physical   (TREEHOUSE_ROOT=/tmp/fm-th-e2e/after-physical/real/pool)
+  meta worktree=        : /tmp/fm-th-e2e/after-physical/real/pool/.treehouse/project-1cb75c/1/project
+  treehouse registered  : /tmp/fm-th-e2e/after-physical/real/pool/.treehouse/project-1cb75c/1/project
+  
+  $ bin/fm-teardown.sh task-x1      [fm root: /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M28J2SK29R6444KZA8VMA86R]
+    🌳 Worktree returned to pool.
+    /tmp/fm-th-e2e/after-physical/real/project: already current
+    teardown task-x1 complete (window firstmate:fm-task-x1, worktree /tmp/fm-th-e2e/after-physical/real/pool/.treehouse/project-1cb75c/1/project)
+    Backlog: task-x1 just finished (this home keeps no markdown backlog at /tmp/fm-th-e2e/after-physical/real/data/backlog.md). Update /tmp/fm-th-e2e/after-physical/real/data/backlog.md - move task-x1 to Done, keep Done to the 10 most recent, then re-scan Queued and dispatch only work whose blockers are gone and date is due.
+  exit=0
+  task meta after teardown: removed (teardown completed)
+  treehouse status:
+    1     available    /tmp/fm-th-e2e/after-physical/real/pool/.treehouse/project-1cb75c/1/project
+  
+  rc=0
+  ======================================================
+  ### pool-root shape   : symlinked-pool-root   (TREEHOUSE_ROOT=/tmp/fm-th-e2e/after-symlinked-pool-root/real/poolhome)
+  meta worktree=        : /tmp/fm-th-e2e/after-symlinked-pool-root/elsewhere/project-1cfae7/1/project
+  treehouse registered  : /tmp/fm-th-e2e/after-symlinked-pool-root/real/poolhome/.treehouse/project-1cfae7/1/project
+  
+  $ bin/fm-teardown.sh task-x1      [fm root: /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M28J2SK29R6444KZA8VMA86R]
+    🌳 Worktree returned to pool.
+    /tmp/fm-th-e2e/after-symlinked-pool-root/real/project: already current
+    teardown task-x1 complete (window firstmate:fm-task-x1, worktree /tmp/fm-th-e2e/after-symlinked-pool-root/elsewhere/project-1cfae7/1/project)
+    Backlog: task-x1 just finished (this home keeps no markdown backlog at /tmp/fm-th-e2e/after-symlinked-pool-root/real/data/backlog.md). Update /tmp/fm-th-e2e/after-symlinked-pool-root/real/data/backlog.md - move task-x1 to Done, keep Done to the 10 most recent, then re-scan Queued and dispatch only work whose blockers are gone and date is due.
+  exit=0
+  task meta after teardown: removed (teardown completed)
+  treehouse status:
+    1     available    /tmp/fm-th-e2e/after-symlinked-pool-root/real/poolhome/.treehouse/project-1cfae7/1/project
+  
+  rc=0
+  ======================================================

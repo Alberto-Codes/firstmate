@@ -1,0 +1,34 @@
+The five new tests/fm-teardown.test.sh cases, run against both commits
+======================================================================
+Each case was run on its own against a clean checkout of the base commit
+(git archive e0d269e -> /tmp/fm-base, same tests/, base bin/) and then as
+part of the full tests/fm-teardown.test.sh run on the target commit.
+
+case                                              base e0d269e   target 79a6188
+------------------------------------------------  ------------   -------------
+registration holds the symlinked spelling (z1)    not ok         ok
+registration holds the physical spelling  (z2)    not ok         ok
+pool registers some other slot            (z3)    ok             ok
+no pool registry at all                   (z4)    ok             ok
+treehouse rejects the spelling given      (z5)    ok             ok
+
+Base-commit output (one invocation per case):
+
+  BASE  test_slot_registered_under_symlinked_spelling_is_returned_that_way
+    not ok - symlinked-registration: teardown should complete when the pool registered the symlinked spelling: expected exit 0, got 1
+  BASE  test_slot_registered_under_physical_spelling_is_returned_that_way
+    not ok - physical-registration: teardown should complete when the pool registered the physical spelling: expected exit 0, got 1
+  BASE  test_slot_the_pool_does_not_register_is_passed_through_byte_identical
+    ok - a slot the pool does not register is handed to treehouse byte-identical
+  BASE  test_worktree_without_a_pool_registry_is_returned_unchanged
+    ok - a worktree with no pool registry is returned unchanged
+  BASE  test_rejected_slot_return_still_refuses_loudly
+    ok - a return treehouse rejects keeps the loud failure instead of silently dropping the lease
+
+Target-commit output (from the full tests/fm-teardown.test.sh run, 89/89 ok):
+
+  ok - a slot registered under its symlinked spelling is returned under that spelling
+  ok - a slot registered under its physical spelling is returned under that spelling
+  ok - a slot the pool does not register is handed to treehouse byte-identical
+  ok - a worktree with no pool registry is returned unchanged
+  ok - a return treehouse rejects keeps the loud failure instead of silently dropping the lease

@@ -1,0 +1,64 @@
+Read-only check on the reporting host (bootc: /home -> /var/home)
+=================================================================
+For every slot this machine's live treehouse pools register, the path is
+spelled the way fm-spawn would record it (physically resolved, /var/home/...)
+and handed to bin/fm-wake-lib.sh's fm_treehouse_return_path - the helper
+bin/fm-teardown.sh now uses at its `treehouse return` boundary. Nothing was
+returned or mutated; these slots stay leased.
+
+HOME=/home/Alberto-Codes  (physically /var/home/Alberto-Codes)
+
+recorded by fm-spawn (physical)                                          handed to treehouse return
+-------------------------------                                          --------------------------
+/var/home/Alberto-Codes/.treehouse/alberto-codes-site-be7b5f/1/alberto-codes-site /home/Alberto-Codes/.treehouse/alberto-codes-site-be7b5f/1/alberto-codes-site
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/alberto-codes-site-be7b5f/2/alberto-codes-site /home/Alberto-Codes/.treehouse/alberto-codes-site-be7b5f/2/alberto-codes-site
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/alberto-codes-site-be7b5f/3/alberto-codes-site /home/Alberto-Codes/.treehouse/alberto-codes-site-be7b5f/3/alberto-codes-site
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/docvet-338355/1/docvet                /home/Alberto-Codes/.treehouse/docvet-338355/1/docvet
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/docvet-338355/2/docvet                /home/Alberto-Codes/.treehouse/docvet-338355/2/docvet
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/firstmate-b8697d/1/firstmate          /home/Alberto-Codes/.treehouse/firstmate-b8697d/1/firstmate
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/firstmate-b8697d/2/firstmate          /home/Alberto-Codes/.treehouse/firstmate-b8697d/2/firstmate
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/firstmate-b8697d/3/firstmate          /home/Alberto-Codes/.treehouse/firstmate-b8697d/3/firstmate
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/firstmate-b8697d/4/firstmate          /home/Alberto-Codes/.treehouse/firstmate-b8697d/4/firstmate
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/firstmate-b8697d/5/firstmate          /home/Alberto-Codes/.treehouse/firstmate-b8697d/5/firstmate
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/repro-b69326/1/repro                  /home/Alberto-Codes/.treehouse/repro-b69326/1/repro
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/saucier-6b967b/1/saucier              /home/Alberto-Codes/.treehouse/saucier-6b967b/1/saucier
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/saucier-6b967b/2/saucier              /home/Alberto-Codes/.treehouse/saucier-6b967b/2/saucier
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/saucier-lab-f7bbc8/2/saucier-lab      /home/Alberto-Codes/.treehouse/saucier-lab-f7bbc8/2/saucier-lab
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/1/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/1/vramfit
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/2/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/2/vramfit
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/3/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/3/vramfit
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/4/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/4/vramfit
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/5/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/5/vramfit
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/6/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/6/vramfit
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/7/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/7/vramfit
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/8/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/8/vramfit
+                                                                           -> matches the pool registration
+/var/home/Alberto-Codes/.treehouse/vramfit-383298/9/vramfit              /home/Alberto-Codes/.treehouse/vramfit-383298/9/vramfit
+                                                                           -> matches the pool registration
+
+Live confirmation of the underlying treehouse rule (treehouse v2.3.0, scratch pool):
+  $ treehouse return --force /tmp/fm-th-probe/real/pool/.treehouse/project-792b2e/1/project
+  worktree /tmp/fm-th-probe/real/pool/.treehouse/project-792b2e/1/project is not managed by treehouse   [exit 1]
+  $ treehouse return --force /tmp/fm-th-probe/link/pool/.treehouse/project-792b2e/1/project
+  🌳 Worktree returned to pool.                                                                          [exit 0]
