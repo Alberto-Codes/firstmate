@@ -1,0 +1,117 @@
+Persistent second mate dispatched into the MAIN HOME's clone: reproduction and fix
+Driven end-to-end through the real bin/fm-spawn.sh and the real treehouse binary.
+
+================ BEFORE - base e0d269e (shared $HOME pool) ================
+fm-spawn.sh under test : /tmp/fm-base-0lmQST/bin/fm-spawn.sh
+treehouse              : v2.3.0
+one machine, one user  : HOME=<tmp>/user
+main home 'alpha'      : clone at <tmp>/homes/mate-alpha/projects/proj
+second mate 'bravo'    : clone at <tmp>/homes/mate-bravo/projects/proj  (same basename, same origin)
+
+----- 1) the main home dispatches a task -----
+warning: <tmp>/homes/mate-alpha/data/demo-alpha/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+🌳 Setting up worktree...
+🌳 Leased worktree at ~/.treehouse/proj-6cdc08/1/proj. Run 'treehouse return ~/.treehouse/proj-6cdc08/1/proj' to release it.
+spawned demo-alpha harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-demo-alpha worktree=<tmp>/user/.treehouse/proj-6cdc08/1/proj
+pane received  : treehouse get
+worktree       : <tmp>/user/.treehouse/proj-6cdc08/1/proj
+  is a worktree of: <tmp>/homes/mate-alpha/projects/proj
+
+----- 1b) that task finishes; teardown returns the slot (no --root needed) -----
+🌳 Worktree returned to pool.
+
+----- 2) the SECOND MATE dispatches a task in its own domain -----
+warning: <tmp>/homes/mate-bravo/data/demo-bravo/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+🌳 Setting up worktree...
+🌳 Leased worktree at ~/.treehouse/proj-6cdc08/1/proj. Run 'treehouse return ~/.treehouse/proj-6cdc08/1/proj' to release it.
+spawned demo-bravo harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-demo-bravo worktree=<tmp>/user/.treehouse/proj-6cdc08/1/proj
+pane received  : treehouse get
+worktree       : <tmp>/user/.treehouse/proj-6cdc08/1/proj
+  is a worktree of: <tmp>/homes/mate-alpha/projects/proj
+  VERDICT: *** the second mate LAUNCHED INTO THE MAIN HOME'S CLONE - the reported defect ***
+
+----- pools on disk -----
+<tmp>/user/.treehouse/.gitignore
+<tmp>/user/.treehouse/proj-6cdc08
+<tmp>/user/.treehouse/proj-6cdc08/1
+<tmp>/user/.treehouse/proj-6cdc08/treehouse-state.json
+<tmp>/user/.treehouse/proj-6cdc08/treehouse-state.lock
+
+
+================ AFTER - cecfe14 (per-home pool root) ================
+fm-spawn.sh under test : /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M28PTS5E5W9VFGM26FFXCK4V/bin/fm-spawn.sh
+treehouse              : v2.3.0
+one machine, one user  : HOME=<tmp>/user
+main home 'alpha'      : clone at <tmp>/homes/mate-alpha/projects/proj
+second mate 'bravo'    : clone at <tmp>/homes/mate-bravo/projects/proj  (same basename, same origin)
+
+----- 1) the main home dispatches a task -----
+warning: <tmp>/homes/mate-alpha/data/demo-alpha/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+🌳 Setting up worktree...
+🌳 Leased worktree at <tmp>/homes/mate-alpha/.treehouse/proj-c75cf2/1/proj. Run 'treehouse return <tmp>/homes/mate-alpha/.treehouse/proj-c75cf2/1/proj' to release it.
+spawned demo-alpha harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-demo-alpha worktree=<tmp>/homes/mate-alpha/.treehouse/proj-c75cf2/1/proj
+pane received  : treehouse get --root '<tmp>/homes/mate-alpha'
+worktree       : <tmp>/homes/mate-alpha/.treehouse/proj-c75cf2/1/proj
+  is a worktree of: <tmp>/homes/mate-alpha/projects/proj
+
+----- 1b) that task finishes; teardown returns the slot (no --root needed) -----
+🌳 Worktree returned to pool.
+
+----- 2) the SECOND MATE dispatches a task in its own domain -----
+warning: <tmp>/homes/mate-bravo/data/demo-bravo/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+🌳 Setting up worktree...
+🌳 Leased worktree at <tmp>/homes/mate-bravo/.treehouse/proj-c75cf2/1/proj. Run 'treehouse return <tmp>/homes/mate-bravo/.treehouse/proj-c75cf2/1/proj' to release it.
+spawned demo-bravo harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-demo-bravo worktree=<tmp>/homes/mate-bravo/.treehouse/proj-c75cf2/1/proj
+pane received  : treehouse get --root '<tmp>/homes/mate-bravo'
+worktree       : <tmp>/homes/mate-bravo/.treehouse/proj-c75cf2/1/proj
+  is a worktree of: <tmp>/homes/mate-bravo/projects/proj
+  VERDICT: the second mate is working in ITS OWN clone, task published
+
+----- pools on disk -----
+<tmp>/homes/mate-alpha/.treehouse/.gitignore
+<tmp>/homes/mate-alpha/.treehouse/proj-c75cf2
+<tmp>/homes/mate-alpha/.treehouse/proj-c75cf2/1
+<tmp>/homes/mate-alpha/.treehouse/proj-c75cf2/treehouse-state.json
+<tmp>/homes/mate-alpha/.treehouse/proj-c75cf2/treehouse-state.lock
+<tmp>/homes/mate-bravo/.treehouse/.gitignore
+<tmp>/homes/mate-bravo/.treehouse/proj-c75cf2
+<tmp>/homes/mate-bravo/.treehouse/proj-c75cf2/1
+<tmp>/homes/mate-bravo/.treehouse/proj-c75cf2/treehouse-state.json
+<tmp>/homes/mate-bravo/.treehouse/proj-c75cf2/treehouse-state.lock
+
+
+================ AFTER - cecfe14, second layer: pane still lands in the shared pool ================
+fm-spawn.sh under test : /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M28PTS5E5W9VFGM26FFXCK4V/bin/fm-spawn.sh
+treehouse              : v2.3.0
+pane treehouse          : --root deliberately DROPPED (stale pool simulation)
+one machine, one user  : HOME=<tmp>/user
+main home 'alpha'      : clone at <tmp>/homes/mate-alpha/projects/proj
+second mate 'bravo'    : clone at <tmp>/homes/mate-bravo/projects/proj  (same basename, same origin)
+
+----- 1) the main home dispatches a task -----
+warning: <tmp>/homes/mate-alpha/data/demo-alpha/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+🌳 Setting up worktree...
+🌳 Leased worktree at ~/.treehouse/proj-166f36/1/proj. Run 'treehouse return ~/.treehouse/proj-166f36/1/proj' to release it.
+spawned demo-alpha harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-demo-alpha worktree=<tmp>/user/.treehouse/proj-166f36/1/proj
+pane received  : treehouse get --root '<tmp>/homes/mate-alpha'
+worktree       : <tmp>/user/.treehouse/proj-166f36/1/proj
+  is a worktree of: <tmp>/homes/mate-alpha/projects/proj
+
+----- 1b) that task finishes; teardown returns the slot (no --root needed) -----
+🌳 Worktree returned to pool.
+
+----- 2) the SECOND MATE dispatches a task in its own domain -----
+warning: <tmp>/homes/mate-bravo/data/demo-bravo/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+🌳 Setting up worktree...
+🌳 Leased worktree at ~/.treehouse/proj-166f36/1/proj. Run 'treehouse return ~/.treehouse/proj-166f36/1/proj' to release it.
+error: treehouse get did not enter an isolated worktree within 60s (last seen '<tmp>/user/.treehouse/proj-166f36/1/proj': it is a worktree of another clone (common git dir '<tmp>/homes/mate-alpha/projects/proj/.git'), not of the spawning project's clone (common git dir '<tmp>/homes/mate-bravo/projects/proj/.git'); spawning project '<tmp>/homes/mate-bravo/projects/proj'); inspect window firstmate:fm-demo-bravo
+pane received  : treehouse get --root '<tmp>/homes/mate-bravo'
+task metadata  : none published (<tmp>/homes/mate-bravo/state/demo-bravo.meta does not exist)
+  VERDICT: the spawn REFUSED before launching any harness
+
+----- pools on disk -----
+<tmp>/user/.treehouse/.gitignore
+<tmp>/user/.treehouse/proj-166f36
+<tmp>/user/.treehouse/proj-166f36/1
+<tmp>/user/.treehouse/proj-166f36/treehouse-state.json
+<tmp>/user/.treehouse/proj-166f36/treehouse-state.lock

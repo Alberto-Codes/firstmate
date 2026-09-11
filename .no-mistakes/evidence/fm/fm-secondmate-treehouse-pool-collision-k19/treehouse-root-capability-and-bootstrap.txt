@@ -1,0 +1,29 @@
+Treehouse --root capability: measured on the real binaries, not inferred
+
+$ bin/fm-install-treehouse.sh (base commit pin) -> v2.0.1
+$ /tmp/th201/bin/treehouse --version
+v2.0.1
+$ /tmp/th201/bin/treehouse get --help  | grep -E '\-\-root|Global Flags'
+(no --root advertised anywhere in the help)
+$ /tmp/th201/bin/treehouse get --root /tmp
+unknown flag: --root
+$ /tmp/th201/bin/treehouse status --root /tmp
+unknown flag: --root
+
+$ bin/fm-install-treehouse.sh (this change's pin) -> v2.3.0  [checksum asserted by the installer]
+$ /tmp/th230/bin/treehouse --version
+v2.3.0
+$ /tmp/th230/bin/treehouse get --help | grep -A1 'Global Flags'
+Global Flags:
+      --root string   Worktree root directory, overriding TREEHOUSE_ROOT and config; relative paths (e.g. "." for an in-project pool) resolve from the repo root
+
+=> v2.0.1 cannot serve the per-home pool root; the pin bump to v2.3.0 was required.
+
+What the operator sees at session start, with each REAL binary on PATH
+(bin/fm-bootstrap.sh with everything else faked; scratch-FM_ROOT git noise filtered):
+
+--- bootstrap with real treehouse v2.0.1 ---
+MISSING: treehouse (installed build's 'treehouse get' lacks --root; install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)
+
+--- bootstrap with real treehouse v2.3.0 ---
+(silent - bootstrap raises nothing about treehouse)

@@ -1,0 +1,33 @@
+Regression direction: the two new suites against the base commit vs the fix
+(same test files in both trees; only bin/ differs)
+
+############ tests/fm-spawn-pool-home.test.sh ############
+--- on base e0d269e (pre-fix) ---
+not ok - spawn launched into a worktree of another clone
+warning: /tmp/fm-spawn-pool-home.9vSlpD/foreign/home/data/pool-home-foreign-k1/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-home-foreign-k1 harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-home-foreign-k1 worktree=/tmp/fm-spawn-pool-home.9vSlpD/foreign/pool-other/proj
+--- on cecfe14 (fixed) ---
+ok - a worktree of another clone of the same origin is refused at the deadline, naming both clones
+ok - the project's own worktree launches and the pane is told to pool under this home
+ok - the pool root is the physical home even when FM_HOME is a symlink
+ok - a single quote in the home path is quoted for the pane
+# all fm-spawn-pool-home tests passed
+
+############ tests/fm-treehouse-pool-root.test.sh (real treehouse v2.3.0, no stubs) ############
+--- on base e0d269e (pre-fix) ---
+ok - the pool key is the clone basename plus the first six sha256 hex digits of its origin URL, rooted at HOME
+ok - under a shared root the second clone of the same origin is handed the first clone's worktree
+tests/fm-treehouse-pool-root.test.sh: line 47: fm_treehouse_pool_root: command not found
+tests/fm-treehouse-pool-root.test.sh: line 47: fm_treehouse_pool_root: command not found
+not ok - fm_treehouse_pool_root did not return the physical home (expected '/tmp/fm-treehouse-pool-root.tvucTN/home-a', got '')
+--- on cecfe14 (fixed) ---
+ok - the pool key is the clone basename plus the first six sha256 hex digits of its origin URL, rooted at HOME
+ok - under a shared root the second clone of the same origin is handed the first clone's worktree
+ok - under each home's own root every clone is handed a worktree of itself
+ok - treehouse return locates the pool from the slot path, without --root
+# all fm-treehouse-pool-root tests passed
+
+############ tests/fm-bootstrap.test.sh (--lease / --root probe cases) ############
+ok - bootstrap reports treehouse --lease/--root + tasks-axi/quota-axi bootstrap contracts
+ok - bootstrap: session-provider backends require their own CLI + jq + treehouse, never tmux
+ok - bootstrap: the treehouse lease check follows the resolved backend's worktree provider
