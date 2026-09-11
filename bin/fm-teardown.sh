@@ -206,9 +206,10 @@
 # checks before any destructive return. Teardown output notes every wait, retry, and
 # removal so the operator can see what happened.
 #
-# Slot path spelling: every return hands treehouse the path re-spelled through
-# $HOME by bin/fm-wake-lib.sh's fm_treehouse_return_path. A path outside the
-# resolved $HOME is passed through unchanged, and failures stay loud either way.
+# Slot path spelling: every return hands treehouse the spelling the pool's own
+# treehouse-state.json registered for that slot, resolved by bin/fm-wake-lib.sh's
+# fm_treehouse_return_path. A path no pool registers is passed through unchanged,
+# and failures stay loud either way.
 #
 # Pre-teardown cleanup sequence (runs once every landed/discard-work safety
 # refusal above has already passed, and BEFORE any worktree return, branch
@@ -1643,8 +1644,8 @@ teardown_treehouse_return() {
   local dir=$1 cd_dir=$2 label=$3 post_cleanup_check=${4:-}
   local out lock attempt=0 max_retries lock_desc slot
 
-  # Re-spell the path through $HOME at the return boundary; the helper owns the
-  # HOME resolution. It never reports "already reclaimed" - failures stay loud.
+  # Hand treehouse the spelling its pool registered for this slot; the helper
+  # owns that lookup. It never reports "already reclaimed" - failures stay loud.
   slot=$(fm_treehouse_return_path "$dir")
 
   # Capture stdout+stderr so non-lock failures stay visible and lock failures can
