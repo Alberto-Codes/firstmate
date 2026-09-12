@@ -1,0 +1,146 @@
+RunPod pod watchdog - end-to-end operator transcript
+====================================================
+bin/fm-runpod-watchdog.sh, branch fm/fm-runpod-pod-watchdog
+
+WHAT THIS SHOWS
+  The gap the captain authorized closing: a rented GPU kept billing after the
+  agent session that rented it was replaced, because pod deletion only ever ran
+  from inside an agent session. These scenes drive the real executable end to
+  end and show a pod being stopped with NO agent alive, plus the states where it
+  must refuse to stop anything.
+
+HOW THE ACCOUNT IS FAKED
+  RunPod's GraphQL endpoint is replaced at the process boundary by a PATH `curl`
+  shim, the same way tests/fm-runpod-watchdog.test.sh does it. Every byte below
+  comes from the real script; no real RunPod account was contacted and nothing
+  was rented or destroyed. Timings in scenes 2-4 are compressed (poll seconds,
+  ceiling in cents) so a six-hour bound can be demonstrated in seconds.
+
+
+== SCENE 1 - the C6 calibration figures: 20 USD ceiling at 3.49 USD/hr
+# the pod has already been up 2h when the run gets around to arming
+$ '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' arm --task c6 --pod pod-c6-h100 --deadline '2026-09-12T23:30:27Z' --ceiling-usd 20 --rate-usd-hr 3.49
+armed: pod pod-c6-h100, declared deadline 2026-09-12T23:30:27Z, ceiling 20 USD at 3.49 USD/hr caps uptime at 20630s measured from the pod's own start, pid 2350081
+# what the operator sees: the ceiling binds BEFORE the declared 6h deadline,
+# and it is anchored to the pod's own start, not to arm time
+$ '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' status --task c6
+c6: pod=pod-c6-h100 deadline=2026-09-12T21:14:17Z source=ceiling anchor=pod-start declared-deadline=2026-09-12T23:30:27Z ceiling=20usd@3.49/hr=20630s-of-uptime watchdog=running pid=2350081
+$ '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' disarm --task c6
+disarmed: c6
+
+== SCENE 2 - the gap the captain asked for: the agent session dies, the meter does not
+# The ceiling is compressed to seconds so the demo can run: 0.02 USD at
+# 3.49 USD/hr = 20s of uptime, of which 10s is already burned. The declared
+# deadline is an hour out, exactly as in the real 6h/20USD shape.
+$ setsid bash '/tmp/fmwd-demo/agent-session.sh' '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' '/tmp/fmwd-demo/agent.pid'
+  [agent session pid 2351295] renting the pod and arming the killswitch
+armed: pod pod-c6-h100, declared deadline 2026-09-12T18:30:29Z, ceiling 0.02 USD at 3.49 USD/hr caps uptime at 20s measured from the pod's own start, pid 2351369
+  [agent session pid 2351295] session replaced - exiting NOW
+
+# the agent session is gone:
+$ kill -0 2351295 2>/dev/null && echo 'agent session STILL ALIVE' || echo "agent session pid 2351295: dead"
+agent session pid 2351295: dead
+# the watchdog is not, and it is in its OWN session id, so a harness
+# tearing down the agent's process group cannot take it:
+$ ps -o pid=,sid=,cmd= -p 2351369
+2351369 2351369 bash /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh run --task c6
+$ ps -o sid= -p $$ | tr -d ' ' | sed 's/^/this demo shell sid: /'
+this demo shell sid: 2349983
+
+# the pod is still billing, and the watchdog knows what it is enforcing:
+$ cat /tmp/fmwd-demo/scene2/api/pods
+pod-c6-h100
+pod-unrelated
+$ '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' status --task c6
+c6: pod=pod-c6-h100 deadline=2026-09-12T17:30:39Z source=ceiling anchor=pod-start declared-deadline=2026-09-12T18:30:29Z ceiling=0.02usd@3.49/hr=20s-of-uptime watchdog=running pid=2351369
+
+# waiting for the ceiling to fall due, with nobody attending...
+
+# the account's pod list AFTER the deadline passed (the unrelated pod is untouched):
+$ cat /tmp/fmwd-demo/scene2/api/pods
+pod-unrelated
+
+# what firstmate was told on the wake channel:
+$ cat /tmp/fmwd-demo/scene2/state/c6.status
+note: rented pod pod-c6-h100 passed the deletion deadline this run declared (in force: ceiling) and has been stopped; absence confirmed by listing the account's pods
+
+# the watchdog's own trail:
+$ cat /tmp/fmwd-demo/scene2/state/c6.runpod-watch.log
+2026-09-12T17:30:29Z armed pod=pod-c6-h100 deadline=1789237829 ceiling_seconds=20
+2026-09-12T17:30:29Z watchdog running pid=2351369
+2026-09-12T17:30:29Z pod pod-c6-h100 started at 2026-09-12T17:30:19Z; ceiling anchored there
+2026-09-12T17:30:39Z deadline passed; terminating pod=pod-c6-h100
+2026-09-12T17:30:39Z podTerminate accepted pod=pod-c6-h100
+2026-09-12T17:30:39Z verified absent from the pod list pod=pod-c6-h100
+2026-09-12T17:30:39Z note rented pod pod-c6-h100 passed the deletion deadline this run declared (in force: ceiling) and has been stopped; absence confirmed by listing the account's pods
+2026-09-12T17:30:39Z watchdog exiting after verified termination
+
+# the API calls the fake endpoint actually received:
+$ cat /tmp/fmwd-demo/scene2/api/calls.log
+17:30:29Z pod list read
+17:30:31Z pod list read
+17:30:33Z pod list read
+17:30:35Z pod list read
+17:30:37Z pod list read
+17:30:39Z pod list read
+17:30:39Z podTerminate called
+17:30:39Z pod list read
+
+# the watchdog exited on its own once the stop was verified:
+$ kill -0 2351369 2>/dev/null && echo 'STILL RUNNING' || echo "watchdog pid 2351369: exited"
+watchdog pid 2351369: exited
+
+# and the credential never reached anything it wrote:
+$ grep -rl 'demo-key-never-logged' /tmp/fmwd-demo/scene2/state 2>/dev/null | sed 's/^/LEAKED: /' || true
+$ grep -c 'demo-key-never-logged' /tmp/fmwd-demo/scene2/api/curl-stdin.log | sed 's/^/authorization headers the API received: /'
+authorization headers the API received: 8
+
+
+NOTE on scenes 3 and 4: these two runs set FM_RUNPOD_ALARM_REPEAT_SECONDS=0
+to disable per-condition alarm rate limiting, so one alarm is shown once per
+poll. At the shipped default (900s) the same 8-poll run appends exactly ONE
+alarm line - verified separately.
+
+== SCENE 3 - fail toward NOT killing: the deadline record is unreadable
+# a truncated record: the pod is named, but the deadline is gone
+$ cat /tmp/fmwd-demo/scene3/state/c6.runpod-watch
+fm-runpod-watch-v1
+pod=pod-c6-h100
+$ timeout 6 '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' run --task c6 >/dev/null 2>&1; echo "loop exit: $? (124 = still watching when the demo cut it off)"
+loop exit: 124 (124 = still watching when the demo cut it off)
+# no pod was touched:
+$ cat /tmp/fmwd-demo/scene3/api/pods
+pod-c6-h100
+$ grep -c podTerminate /tmp/fmwd-demo/scene3/api/calls.log || echo 'podTerminate calls: 0'
+grep: /tmp/fmwd-demo/scene3/api/calls.log: No such file or directory
+podTerminate calls: 0
+# and the operator was told, on the channel that wakes firstmate:
+$ cat /tmp/fmwd-demo/scene3/state/c6.status
+blocked [key=runpod-watch-c6-record-unreadable]: the pod watchdog for c6 cannot read the run's deadline record, so it will NOT terminate anything; check the rented pod by hand
+blocked [key=runpod-watch-c6-record-unreadable]: the pod watchdog for c6 cannot read the run's deadline record, so it will NOT terminate anything; check the rented pod by hand
+blocked [key=runpod-watch-c6-record-unreadable]: the pod watchdog for c6 cannot read the run's deadline record, so it will NOT terminate anything; check the rented pod by hand
+blocked [key=runpod-watch-c6-record-unreadable]: the pod watchdog for c6 cannot read the run's deadline record, so it will NOT terminate anything; check the rented pod by hand
+blocked [key=runpod-watch-c6-record-unreadable]: the pod watchdog for c6 cannot read the run's deadline record, so it will NOT terminate anything; check the rented pod by hand
+blocked [key=runpod-watch-c6-record-unreadable]: the pod watchdog for c6 cannot read the run's deadline record, so it will NOT terminate anything; check the rented pod by hand
+$ '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' status --task c6
+c6: RECORD UNREADABLE - this watchdog will alarm and will not terminate anything
+
+== SCENE 4 - a pod id that was never in the account keeps alarming
+# the deadline passed an hour ago, but this id has never been sighted
+$ timeout 6 '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' run --task c6 >/dev/null 2>&1; echo "loop exit: $? (124 = still watching)"
+loop exit: 124 (124 = still watching)
+$ grep -c podTerminate /tmp/fmwd-demo/scene4/api/calls.log || echo 'podTerminate calls: 0'
+0
+podTerminate calls: 0
+$ cat /tmp/fmwd-demo/scene4/state/c6.status
+blocked [key=runpod-watch-c6-pod-never-seen]: the pod watchdog for c6 has never seen pod pod-typo in the account's pod list, so it is guarding nothing and will terminate nothing - the pod id may be wrong or stale while a rented pod keeps billing; check the account by hand
+blocked [key=runpod-watch-c6-pod-never-seen]: the pod watchdog for c6 has never seen pod pod-typo in the account's pod list, so it is guarding nothing and will terminate nothing - the pod id may be wrong or stale while a rented pod keeps billing; check the account by hand
+blocked [key=runpod-watch-c6-pod-never-seen]: the pod watchdog for c6 has never seen pod pod-typo in the account's pod list, so it is guarding nothing and will terminate nothing - the pod id may be wrong or stale while a rented pod keeps billing; check the account by hand
+blocked [key=runpod-watch-c6-pod-never-seen]: the pod watchdog for c6 has never seen pod pod-typo in the account's pod list, so it is guarding nothing and will terminate nothing - the pod id may be wrong or stale while a rented pod keeps billing; check the account by hand
+blocked [key=runpod-watch-c6-pod-never-seen]: the pod watchdog for c6 has never seen pod pod-typo in the account's pod list, so it is guarding nothing and will terminate nothing - the pod id may be wrong or stale while a rented pod keeps billing; check the account by hand
+blocked [key=runpod-watch-c6-pod-never-seen]: the pod watchdog for c6 has never seen pod pod-typo in the account's pod list, so it is guarding nothing and will terminate nothing - the pod id may be wrong or stale while a rented pod keeps billing; check the account by hand
+# and the warning stays OPEN as a decision even after the watch is retired:
+$ '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-runpod-watchdog.sh' disarm --task c6
+disarmed: c6
+$ bash -c '. "$1"; status_open_decisions "$2"' _ '/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2B46ZPE0Q8JXMDWY96E6F87/bin/fm-classify-lib.sh' '/tmp/fmwd-demo/scene4/state/c6.status'
+runpod-watch-c6-pod-never-seen	blocked	the pod watchdog for c6 has never seen pod pod-typo in the account's pod list, so it is guarding nothing and will terminate nothing - the pod id may be wrong or stale while a rented pod keeps billing; check the account by hand

@@ -1,0 +1,23 @@
+ok - a run whose deadline has passed is terminated, verified by listing, and leaves no open decision
+ok - a run whose state cannot be read is NOT terminated, and firstmate is alarmed instead
+ok - a run still inside its declared deadline is left alone
+ok - a termination the pod list does not confirm is alarmed, never reported as stopped
+ok - a failed pod-list read keeps the watch alive instead of concluding anything
+ok - a pod that was seen and then disappears ends the watch cleanly
+ok - a pod never sighted is never stopped, never reported stopped, and keeps alarming past its deadline
+ok - disarming a watch that never sighted its pod leaves that warning standing
+ok - a never-sighted warning about one pod is not closed by sighting another
+ok - when one unseen pod turns up, the surviving decision names the one still missing
+ok - watchdog alarms own their decision key instead of sharing the unkeyed default
+ok - an alarm the watchdog raised is closed under its own key once the condition clears
+ok - the credential is parsed out of the shared .env rather than executed with it
+ok - a corrupt pid file cannot make the watchdog signal the process group that invoked it
+ok - the credential reaches the API but never any file the watchdog writes
+ok - arm refuses to guess a deadline and refuses one that has already passed
+ok - a value-taking flag given as the last argument is refused instead of spun on
+ok - the declared ceiling is anchored to the pod start, and re-arming cannot extend it
+ok - a pod-start anchor survives a re-arm for the same pod and is not inherited by another
+ok - a carried anchor whose ceiling already fell due is refused, alarmed, and terminates nothing
+ok - status never reports an instant, source, or anchor from a previous arm
+ok - a ceiling whose pod-start anchor cannot be read is not enforced, and status says so
+ok - the armed watchdog survives the death of the shell that armed it, in its own session
