@@ -276,9 +276,12 @@ JSON
 # actually reached the human, so only the pair identifies a real decline.
 # This walks the whole matrix and pins the two cases that decide it in opposite
 # directions: warningShown===true with approved===false still REFUSES, while
-# approved===false with warningShown false or absent REGISTERS. The aftermath of
-# a refusal - untouched store, unwritten worktree entry - stays owned by the
-# test above; this one owns which combination produces it.
+# approved===false with warningShown false or absent REGISTERS. It also covers
+# the rows where the approval flag is ABSENT rather than false, which is where
+# a future editor of the predicate is most likely to go wrong: warningShown
+# alone must not read as a decline, and the absent flag must stay absent. The
+# aftermath of a refusal - untouched store, unwritten worktree entry - stays
+# owned by the test above; this one owns which combination produces it.
 test_external_imports_decline_requires_the_warning_shown_field() {
   local name entry outcome rec store out code ran=0
   # The case table is read on fd 3, never stdin: run_trust runs git and node,
@@ -325,6 +328,25 @@ JSON
         assert_all_flags "$store" "$WT" \
           "[$name] the worktree entry did not carry the refreshed import consent"
         ;;
+      register-approved-absent)
+        expect_code 0 "$code" "[$name] an entry with no approval flag at all must register: $out"
+        assert_trusted "$store" "$WT" "[$name] the worktree entry did not gain trust"
+        assert_trusted "$store" "$PROJ" "[$name] the project-root entry did not gain trust"
+        # Only the worktree entry is asserted trust-only here. The project
+        # entry may legitimately already carry warningShown, which this script
+        # must leave exactly as it found it, so the blanket
+        # assert_trust_only_no_import_consent would be asserting the wrong
+        # property on it.
+        assert_trust_only_no_import_consent "$store" "$WT" \
+          "[$name] the worktree entry gained import consent the project never granted"
+        # A warningShown===true with no approval flag must not read as a
+        # decline, and the absent flag must STAY absent: inventing
+        # approved===false here would fabricate half of the pair this predicate
+        # reads, turning a never-answered entry into a future decline.
+        assert_store_value "$store" 'undefined' \
+          "[$name] the registration invented an approval flag that was never there" \
+          projects "$PROJ" hasClaudeMdExternalIncludesApproved
+        ;;
       *) fail "[$name] unknown expected outcome '$outcome'" ;;
     esac
   done 3<<'CASES'
@@ -333,8 +355,10 @@ never-asked-shown-false|"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMd
 never-asked-shown-absent|"hasClaudeMdExternalIncludesApproved":false|register-trust-only
 approved-shown-true|"hasClaudeMdExternalIncludesApproved":true,"hasClaudeMdExternalIncludesWarningShown":true|register-with-consent
 approved-shown-false|"hasClaudeMdExternalIncludesApproved":true,"hasClaudeMdExternalIncludesWarningShown":false|register-with-consent
+approved-absent-shown-true|"hasClaudeMdExternalIncludesWarningShown":true|register-approved-absent
+approved-absent-shown-false|"hasClaudeMdExternalIncludesWarningShown":false|register-approved-absent
 CASES
-  [ "$ran" -eq 5 ] || fail "the decline matrix covered $ran combinations, expected all 5"
+  [ "$ran" -eq 7 ] || fail "the decline matrix covered $ran combinations, expected all 7"
   pass "fm-claude-trust.sh: only approved===false WITH warningShown===true reads as a decline"
 }
 
