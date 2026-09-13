@@ -1,0 +1,23 @@
+=== Adversarial: a genuine decline cannot be worn down by retries ===
+Three back-to-back registrations against the same declined project entry.
+--- attempt 1
+error: project entry for <project> in <config>/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '<worktree>' and project '<project>' in '<config>/.claude.json'
+exit status: 1
+--- store bytes changed: no (byte-for-byte unchanged)
+--- attempt 2
+error: project entry for <project> in <config>/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '<worktree>' and project '<project>' in '<config>/.claude.json'
+exit status: 1
+--- store bytes changed: no (byte-for-byte unchanged)
+--- attempt 3
+error: project entry for <project> in <config>/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '<worktree>' and project '<project>' in '<config>/.claude.json'
+exit status: 1
+--- store bytes changed: no (byte-for-byte unchanged)
+
+=== Adversarial: repeated runs against the same store (idempotence) ===
+run 1 exit=1
+run 2 exit=1
+run 3 exit=1
+store after 3 refused runs: byte-for-byte unchanged

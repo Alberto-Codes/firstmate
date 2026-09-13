@@ -1,0 +1,57 @@
+===================================================================
+ Real fm-spawn.sh claude worker launch - BEFORE vs AFTER
+ Same operator store shape in both halves: the project entry carries
+ hasClaudeMdExternalIncludesApproved=false with no warningShown
+ (the measured never-asked default). tmux and the claude binary are
+ stubbed; fm-spawn.sh, fm-claude-trust.sh and the store write are real.
+===================================================================
+
+################ BEFORE (base ecfe071) ################
+### spawn scenario: basenever
+--- project entry the operator's store already carried:
+    {"hasTrustDialogAccepted":false,"hasClaudeMdExternalIncludesApproved":false}
+--- $ fm-spawn.sh <worktree> basenever <project> claude --mode no-mistakes --yolo off
+warning: <case>/home/data/basenever/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: project entry for <case>/project in <case>/claude-config/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '<case>/wt' and project '<case>/project' in '<case>/claude-config/.claude.json'
+error: could not pre-register Claude workspace trust for <case>/wt; refusing to launch a claude worker that would wedge on the trust dialog; inspect window firstmate:fm-basenever
+exit status: 1
+--- launch command actually delivered to the pane:
+    <no launch command - the worker was never started>
+--- worktree entry in the store the worker reads:
+    <no entry - the pane would wedge on the trust dialog>
+--- project entry after the spawn:
+    {"hasTrustDialogAccepted":false,"hasClaudeMdExternalIncludesApproved":false}
+
+################ AFTER (target edac91c) ################
+### spawn scenario: neverasked
+--- project entry the operator's store already carried:
+    {"hasTrustDialogAccepted":false,"hasClaudeMdExternalIncludesApproved":false}
+--- $ fm-spawn.sh <worktree> neverasked <project> claude --mode no-mistakes --yolo off
+warning: <case>/home/data/neverasked/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned neverasked harness=claude kind=ship mode=no-mistakes yolo=off window=firstmate:fm-neverasked worktree=<case>/wt
+exit status: 0
+--- launch command actually delivered to the pane:
+CLAUDE_CONFIG_DIR='<case>/claude-config' env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_SEND_FEEDBACK=0 claude --dangerously-skip-permissions --settings '{"feedbackDrafts":"off","attribution":{"commit":"","pr":"","sessionUrl":false}}' "$('/home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2DEKG398TB0MQ93AZX4ZV5W/bin/fm-operational-input.sh' encode launch-brief < '<case>/home/data/neverasked/launch-brief.md')"
+--- worktree entry in the store the worker reads:
+    {"hasTrustDialogAccepted":true}
+--- project entry after the spawn:
+    {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false}
+
+######## AFTER, adversarial: a GENUINE decline must still block ########
+### spawn scenario: genuinedecline
+--- project entry the operator's store already carried:
+    {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":true}
+--- $ fm-spawn.sh <worktree> genuinedecline <project> claude --mode no-mistakes --yolo off
+warning: <case>/home/data/genuinedecline/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: project entry for <case>/project in <case>/claude-config/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '<case>/wt' and project '<case>/project' in '<case>/claude-config/.claude.json'
+error: could not pre-register Claude workspace trust for <case>/wt; refusing to launch a claude worker that would wedge on the trust dialog; inspect window firstmate:fm-genuinedecline
+exit status: 1
+--- launch command actually delivered to the pane:
+    <no launch command - the worker was never started>
+--- worktree entry in the store the worker reads:
+    <no entry - the pane would wedge on the trust dialog>
+--- project entry after the spawn:
+    {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":true}
+

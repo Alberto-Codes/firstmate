@@ -1,0 +1,9 @@
+=== A never-asked registration must repair or migrate NOTHING else ===
+Store seeded with 53 operator project entries carrying approved=false,
+each with session history, plus user-scope oauthAccount and mcpServers.
+trusted: <worktree>
+trusted (project root): <project>
+
+--- every key whose value changed in the whole store:
+    projects.<project>.hasTrustDialogAccepted : false -> true
+    projects.<worktree> : undefined -> {"hasTrustDialogAccepted":true}

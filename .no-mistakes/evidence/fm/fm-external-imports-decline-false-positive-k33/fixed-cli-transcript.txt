@@ -1,0 +1,129 @@
+===================================================================
+ fm-claude-trust.sh - live CLI transcript, FIXED script (edac91c)
+ Isolated store seeded with 53 operator project entries carrying
+ hasClaudeMdExternalIncludesApproved=false and no warningShown,
+ mirroring the measured store in the change's intent.
+===================================================================
+
+### scenario: never-asked-absent
+--- project entry BEFORE (what the operator's own interactive config recorded)
+{
+  "hasTrustDialogAccepted": false,
+  "hasClaudeMdExternalIncludesApproved": false,
+  "exampleFiles": [
+    "a.ts"
+  ]
+}
+--- $ CLAUDE_CONFIG_DIR=<config> fm-claude-trust.sh <worktree> <project>
+trusted: <worktree>
+trusted (project root): <project>
+exit status: 0
+--- project entry AFTER
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesApproved": false,
+  "exampleFiles": [
+    "a.ts"
+  ]
+}
+--- worktree entry AFTER (absent = spawn would wedge on the trust dialog)
+{
+  "hasTrustDialogAccepted": true
+}
+--- store bytes changed: yes
+--- unrelated operator entries still intact: 53/53, oauthAccount={"accountUuid":"operator-account"}
+
+### scenario: never-asked-shown-false
+--- project entry BEFORE (what the operator's own interactive config recorded)
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesApproved": false,
+  "hasClaudeMdExternalIncludesWarningShown": false
+}
+--- $ CLAUDE_CONFIG_DIR=<config> fm-claude-trust.sh <worktree> <project>
+trusted: <worktree>
+trusted (project root): <project>
+exit status: 0
+--- project entry AFTER
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesApproved": false,
+  "hasClaudeMdExternalIncludesWarningShown": false
+}
+--- worktree entry AFTER (absent = spawn would wedge on the trust dialog)
+{
+  "hasTrustDialogAccepted": true
+}
+--- store bytes changed: yes
+--- unrelated operator entries still intact: 53/53, oauthAccount={"accountUuid":"operator-account"}
+
+### scenario: genuine-decline
+--- project entry BEFORE (what the operator's own interactive config recorded)
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesApproved": false,
+  "hasClaudeMdExternalIncludesWarningShown": true
+}
+--- $ CLAUDE_CONFIG_DIR=<config> fm-claude-trust.sh <worktree> <project>
+error: project entry for <project> in <config>/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '<worktree>' and project '<project>' in '<config>/.claude.json'
+exit status: 1
+--- project entry AFTER
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesApproved": false,
+  "hasClaudeMdExternalIncludesWarningShown": true
+}
+--- worktree entry AFTER (absent = spawn would wedge on the trust dialog)
+"<no entry>"
+--- store bytes changed: no (byte-for-byte unchanged)
+--- unrelated operator entries still intact: 53/53, oauthAccount={"accountUuid":"operator-account"}
+
+### scenario: standing-consent
+--- project entry BEFORE (what the operator's own interactive config recorded)
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesApproved": true,
+  "hasClaudeMdExternalIncludesWarningShown": true
+}
+--- $ CLAUDE_CONFIG_DIR=<config> fm-claude-trust.sh <worktree> <project>
+trusted: <worktree>
+trusted (project root): <project>
+exit status: 0
+--- project entry AFTER
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesApproved": true,
+  "hasClaudeMdExternalIncludesWarningShown": true
+}
+--- worktree entry AFTER (absent = spawn would wedge on the trust dialog)
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesApproved": true,
+  "hasClaudeMdExternalIncludesWarningShown": true
+}
+--- store bytes changed: yes
+--- unrelated operator entries still intact: 53/53, oauthAccount={"accountUuid":"operator-account"}
+
+### scenario: approved-absent-shown-true
+--- project entry BEFORE (what the operator's own interactive config recorded)
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesWarningShown": true
+}
+--- $ CLAUDE_CONFIG_DIR=<config> fm-claude-trust.sh <worktree> <project>
+trusted: <worktree>
+trusted (project root): <project>
+exit status: 0
+--- project entry AFTER
+{
+  "hasTrustDialogAccepted": true,
+  "hasClaudeMdExternalIncludesWarningShown": true
+}
+--- worktree entry AFTER (absent = spawn would wedge on the trust dialog)
+{
+  "hasTrustDialogAccepted": true
+}
+--- store bytes changed: yes
+--- unrelated operator entries still intact: 53/53, oauthAccount={"accountUuid":"operator-account"}
+
