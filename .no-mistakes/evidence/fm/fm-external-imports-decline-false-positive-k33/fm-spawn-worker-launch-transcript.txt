@@ -1,0 +1,54 @@
+########## fm-spawn.sh worker launch - BASE commit ecfe071 (before the fix) ##########
+
+--- [BASE-ecfe071] never-asked ---
+project entry in the operator's store before the spawn:
+  {"hasTrustDialogAccepted":false,"hasClaudeMdExternalIncludesApproved":false}
+$ fm-spawn.sh liveneverasked90649 <project> claude --mode no-mistakes --yolo off
+  warning: /tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/never-asked/home/data/liveneverasked90649/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+  error: project entry for /tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/never-asked/project in /tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/never-asked/claude-config/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+  error: refusing to pre-register Claude trust: could not record trust for '/tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/never-asked/wt' and project '/tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/never-asked/project' in '/tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/never-asked/claude-config/.claude.json'
+  error: could not pre-register Claude workspace trust for /tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/never-asked/wt; refusing to launch a claude worker that would wedge on the trust dialog; inspect window firstmate:fm-liveneverasked90649
+  exit=1
+worker launch command actually delivered to the pane:  <none - no worker was launched>
+worktree entry in the store after the spawn:
+  <no entry - trust never registered>
+
+--- [BASE-ecfe071] genuine-decline ---
+project entry in the operator's store before the spawn:
+  {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":true}
+$ fm-spawn.sh livedeclined90649 <project> claude --mode no-mistakes --yolo off
+  warning: /tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/genuine-decline/home/data/livedeclined90649/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+  error: project entry for /tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/genuine-decline/project in /tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/genuine-decline/claude-config/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+  error: refusing to pre-register Claude trust: could not record trust for '/tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/genuine-decline/wt' and project '/tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/genuine-decline/project' in '/tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/genuine-decline/claude-config/.claude.json'
+  error: could not pre-register Claude workspace trust for /tmp/fm-spawn-live-BASE-ecfe071.8KqV1Y/genuine-decline/wt; refusing to launch a claude worker that would wedge on the trust dialog; inspect window firstmate:fm-livedeclined90649
+  exit=1
+worker launch command actually delivered to the pane:  <none - no worker was launched>
+worktree entry in the store after the spawn:
+  <no entry - trust never registered>
+
+########## fm-spawn.sh worker launch - TARGET commit 88d863c (after the fix) ##########
+
+--- [TARGET-88d863c] never-asked ---
+project entry in the operator's store before the spawn:
+  {"hasTrustDialogAccepted":false,"hasClaudeMdExternalIncludesApproved":false}
+$ fm-spawn.sh liveneverasked91606 <project> claude --mode no-mistakes --yolo off
+  warning: /tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/never-asked/home/data/liveneverasked91606/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+  spawned liveneverasked91606 harness=claude kind=ship mode=no-mistakes yolo=off window=firstmate:fm-liveneverasked91606 worktree=/tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/never-asked/wt
+  exit=0
+worker launch command actually delivered to the pane:
+  claude --dangerously-skip-permissions --settings 
+worktree entry in the store after the spawn:
+  {"hasTrustDialogAccepted":true}
+
+--- [TARGET-88d863c] genuine-decline ---
+project entry in the operator's store before the spawn:
+  {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":true}
+$ fm-spawn.sh livedeclined91606 <project> claude --mode no-mistakes --yolo off
+  warning: /tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/genuine-decline/home/data/livedeclined91606/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+  error: project entry for /tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/genuine-decline/project in /tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/genuine-decline/claude-config/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+  error: refusing to pre-register Claude trust: could not record trust for '/tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/genuine-decline/wt' and project '/tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/genuine-decline/project' in '/tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/genuine-decline/claude-config/.claude.json'
+  error: could not pre-register Claude workspace trust for /tmp/fm-spawn-live-TARGET-88d863c.1vMYNr/genuine-decline/wt; refusing to launch a claude worker that would wedge on the trust dialog; inspect window firstmate:fm-livedeclined91606
+  exit=1
+worker launch command actually delivered to the pane:  <none - no worker was launched>
+worktree entry in the store after the spawn:
+  <no entry - trust never registered>

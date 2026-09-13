@@ -1,0 +1,60 @@
+
+=== S1/S3  never-asked project entry (approved=false, warningShown ABSENT) - the shape measured 53x in the operator store ===
+store before:
+  project-root: {"hasTrustDialogAccepted":false,"hasClaudeMdExternalIncludesApproved":false}
+
+--- BASE commit ecfe071 ($ fm-claude-trust.sh <worktree> <project>) ---
+error: project entry for /tmp/fmtrust-live/run/never-asked/project in /tmp/fmtrust-live/run/never-asked/config/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '/tmp/fmtrust-live/run/never-asked/wt' and project '/tmp/fmtrust-live/run/never-asked/project' in '/tmp/fmtrust-live/run/never-asked/config/.claude.json'
+exit=1
+
+--- TARGET commit 88d863c ($ fm-claude-trust.sh <worktree> <project>) ---
+trusted: /tmp/fmtrust-live/run/never-asked/wt
+trusted (project root): /tmp/fmtrust-live/run/never-asked/project
+exit=0
+store after:
+  project-root: {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false}
+  worktree   : {"hasTrustDialogAccepted":true}
+
+=== S2  genuine decline (approved=false AND warningShown=true) must STILL refuse ===
+store before:
+  project-root: {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":true}
+
+--- TARGET commit 88d863c ---
+error: project entry for /tmp/fmtrust-live/run/declined/project in /tmp/fmtrust-live/run/declined/config/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '/tmp/fmtrust-live/run/declined/wt' and project '/tmp/fmtrust-live/run/declined/project' in '/tmp/fmtrust-live/run/declined/config/.claude.json'
+exit=1
+store after:
+  project-root: {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":true}
+  worktree   : <no entry>
+  store bytes: UNCHANGED (ed47a42406382eabb94e2746998ad4859cdaece34c3ca70017d8e6b7815db7b7  -)
+
+=== S4  adversarial: never-asked must not drift into consent, and a half-filled entry must not gain an invented flag ===
+run 1: exit=0  trusted: /tmp/fmtrust-live/run/no-drift/wt
+run 2: exit=0  trusted: /tmp/fmtrust-live/run/no-drift/wt
+run 3: exit=0  trusted: /tmp/fmtrust-live/run/no-drift/wt
+after 3 registrations:
+  project-root: {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":false}
+  worktree   : {"hasTrustDialogAccepted":true}
+
+-- warningShown=true with NO approval flag: not a decline, and no approval flag may be invented --
+trusted: /tmp/fmtrust-live/run/shown-only/wt
+trusted (project root): /tmp/fmtrust-live/run/shown-only/project
+exit=0
+  project-root: {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesWarningShown":true}
+  worktree   : {"hasTrustDialogAccepted":true}
+
+-- re-arming a decline after a never-asked registration still refuses (no consent was laundered) --
+first (never-asked) registration exit=0
+human then answers "No, disable" (warningShown=true added):
+  project-root: {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":true}
+error: project entry for /tmp/fmtrust-live/run/relock/project in /tmp/fmtrust-live/run/relock/config/.claude.json already declined external CLAUDE.md imports; refusing to override that consent
+error: refusing to pre-register Claude trust: could not record trust for '/tmp/fmtrust-live/run/relock/wt' and project '/tmp/fmtrust-live/run/relock/project' in '/tmp/fmtrust-live/run/relock/config/.claude.json'
+exit=1
+
+=== S5  standing consent (approved=true) is still carried forward unchanged ===
+trusted: /tmp/fmtrust-live/run/approved/wt
+trusted (project root): /tmp/fmtrust-live/run/approved/project
+exit=0
+  project-root: {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":true,"hasClaudeMdExternalIncludesWarningShown":true}
+  worktree   : {"hasTrustDialogAccepted":true,"hasClaudeMdExternalIncludesApproved":true,"hasClaudeMdExternalIncludesWarningShown":true}

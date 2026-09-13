@@ -1,0 +1,29 @@
+=== S3  fleet replay: one store, 5 cloned projects all carrying the never-asked shape ===
+before: 5 project entries, trusted=0
+  launch 1: exit=0  trusted: /tmp/fmtrust-live/scope/wt1
+  launch 2: exit=0  trusted: /tmp/fmtrust-live/scope/wt2
+  launch 3: exit=0  trusted: /tmp/fmtrust-live/scope/wt3
+  launch 4: exit=0  trusted: /tmp/fmtrust-live/scope/wt4
+  launch 5: exit=0  trusted: /tmp/fmtrust-live/scope/wt5
+after:  10 project entries, trusted=10, any import consent manufactured=false
+
+=== S6  the never-asked store must NOT make any new path registrable ===
+  primary checkout as worktree       exit=1  error: refusing to pre-register Claude trust: '/tmp/fmtrust-live/scope/p1' is a primary checkout, not an isolated worktree
+  another project's worktree         exit=1  error: refusing to pre-register Claude trust: '/tmp/fmtrust-live/scope/wt2' is not a worktree of project '/tmp/fmtrust-live/scope/p1'
+  subdirectory of the worktree       exit=1  error: refusing to pre-register Claude trust: task worktree '/tmp/fmtrust-live/scope/wt1/.git' is not an accessible directory
+  the Claude config directory        exit=1  error: refusing to pre-register Claude trust: '/tmp/fmtrust-live/scope/config' is the Claude config directory, not a task worktree
+  a plain non-git directory          exit=1  error: refusing to pre-register Claude trust: '/tmp/fmtrust-live/scope/plain' is not inside a git repository
+  a path that does not exist         exit=1  error: refusing to pre-register Claude trust: task worktree '/tmp/fmtrust-live/scope/nope' is not an accessible directory
+
+store entries after the refusals (must still be exactly the 5 projects + 5 worktrees):
+  10 entries
+    /tmp/fmtrust-live/scope/p1
+    /tmp/fmtrust-live/scope/p2
+    /tmp/fmtrust-live/scope/p3
+    /tmp/fmtrust-live/scope/p4
+    /tmp/fmtrust-live/scope/p5
+    /tmp/fmtrust-live/scope/wt1
+    /tmp/fmtrust-live/scope/wt2
+    /tmp/fmtrust-live/scope/wt3
+    /tmp/fmtrust-live/scope/wt4
+    /tmp/fmtrust-live/scope/wt5
