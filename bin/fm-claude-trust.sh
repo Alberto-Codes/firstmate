@@ -74,7 +74,8 @@
 # hasClaudeMdExternalIncludesWarningShown TOGETHER, because approved===false
 # alone is also what an entry carries for a project nobody was ever asked
 # about; the declinedExternalImports predicate in the node writer below owns
-# that pairing and the measurement behind it.
+# that pairing, the measurement behind it, and - stated there explicitly -
+# which part of it this repo has NOT verified.
 #
 # THE SCOPE TEST IS THE SAFETY PROPERTY, and it is STRUCTURAL rather than a
 # path policy. Each mode has its own, because the two directories have entirely
@@ -394,10 +395,11 @@ fi
 #
 # The two external-imports flags (worktree mode only) are gated separately
 # from the trust flag, because they are a CONSENT grant, not a pre-approval
-# this script is allowed to manufacture. Only Claude Code's own interactive
-# dialog can turn hasClaudeMdExternalIncludesApproved into a human's yes; this
-# script's own job is to keep a worker from wedging on a dialog, never to
-# answer that dialog on the human's behalf. So the import flags land on the
+# this script is allowed to manufacture. This script must never write
+# hasClaudeMdExternalIncludesApproved as a human's yes; that consent comes
+# from the human's own interactive answer, and this script's job is to keep a
+# worker from wedging on a dialog, never to answer one on the human's behalf.
+# So the import flags land on the
 # project entry - the only place the imports check ever reads (see the
 # disassembly note above) - only when that entry ALREADY carries
 # hasClaudeMdExternalIncludesApproved===true, i.e. the human already said yes
@@ -454,15 +456,36 @@ const flagsLanded = (projects, key, flags) =>
 //
 // IT TAKES BOTH FIELDS TO IDENTIFY THAT ANSWER, and this predicate is the one
 // owner of that pairing. hasClaudeMdExternalIncludesApproved===false on its
-// own does NOT mean the human declined: it is equally the value an entry
-// carries for a project the dialog was never shown for. Measured 2026-09-13
-// against an operator store where 53 project entries carried
-// approved===false and NOT ONE of them carried
-// hasClaudeMdExternalIncludesWarningShown===true - several alongside
+// own does NOT identify a decline: it is also the value an entry carries for
+// a project the dialog was never shown for. The three paragraphs below are
+// deliberately separated by grade of evidence, because conflating them is the
+// exact defect this predicate was changed to remove.
+//
+// WHAT IS MEASURED. On 2026-09-13, in one operator store, 53 project entries
+// carried approved===false and NOT ONE of them also carried
+// hasClaudeMdExternalIncludesWarningShown===true; several sat alongside
 // hasTrustDialogAccepted===false, i.e. directories no interactive session had
-// ever run in, so no dialog could have been answered there. warningShown is
-// what records that the question actually reached the human, so only the pair
-// reads as a decline. approved===false with warningShown false or absent is
+// ever run in. So in the observed data the two fields together separate the
+// entries a human could have answered for from the ones nobody was asked
+// about, and approved===false alone does not.
+//
+// WHAT IS NOT VERIFIED HERE, and must not be read out of the paragraph above:
+// the vendor write behaviour behind warningShown. Nothing in this repo has
+// observed Claude Code set that field when it presents the dialog. The name
+// reads that way and the measurement is consistent with it, which makes the
+// pairing an inference from observed data - not the disassembly-grade
+// evidence the two-entries note near the top of this script rests on. Read it
+// as the best available reading of that data, never as a mechanism this
+// script has established.
+//
+// WHAT BOUNDS BEING WRONG, as a backstop and not as proof of the above: if a
+// decline is ever recorded without warningShown, this predicate misses it and
+// trust registers anyway. That cannot leak consent, because
+// approvedExternalImports below independently requires approved===true before
+// either import flag is written, so a missed decline costs a trust-flag
+// registration and never a manufactured approval.
+//
+// approved===false with warningShown false or absent is therefore treated as
 // "never asked": left exactly as it is (this script clears nothing) while
 // trust registers normally, the same as any other project claude has not been
 // asked about.
