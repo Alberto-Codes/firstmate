@@ -238,16 +238,13 @@ JSON
   pass "fm-claude-trust.sh: preserves unrelated keys on the project-root entry"
 }
 
-# hasClaudeMdExternalIncludesApproved===false alongside
-# hasClaudeMdExternalIncludesWarningShown===true on the project-root entry is a
-# human's explicit "No, disable" answer - the dialog was shown and the answer
-# was no - recorded in the SAME store their own interactive sessions read. A
-# spawn must never flip that to true on their behalf: doing so would grant
-# every later interactive session in that checkout silent external-file
-# inclusion the human declined. The whole registration refuses instead, and the
-# store - including the worktree entry, which is never reached - must come back
-# byte-for-byte unchanged. Which field combinations reach this refusal at all is
-# owned by the matrix test below.
+# hasClaudeMdExternalIncludesApproved===false with WarningShown===true on the
+# project-root entry is a human's explicit "No, disable" answer, recorded in the SAME store their own
+# interactive sessions read. A spawn must never flip that to true on their
+# behalf: doing so would grant every later interactive session in that
+# checkout silent external-file inclusion the human declined. The whole
+# registration refuses instead, and the store - including the worktree entry,
+# which is never reached - must come back byte-for-byte unchanged.
 test_project_root_entry_declined_external_imports_is_not_overridden() {
   local rec store out before after
   rec=$(make_case project-decline)
@@ -267,99 +264,26 @@ JSON
   pass "fm-claude-trust.sh: refuses to override a project's declined external-imports consent"
 }
 
-# That refusal is identified by a PAIR of fields, and reading only the first of
-# them is what once made this refuse every launch in a fleet: a project entry
-# carries hasClaudeMdExternalIncludesApproved===false both when the human
-# answered "No, disable" AND when the dialog was never shown at all, so a test
-# that consults it alone reads never-asked as refused. The sibling field
-# hasClaudeMdExternalIncludesWarningShown is what records that the question
-# actually reached the human, so only the pair identifies a real decline.
-# This walks the whole matrix and pins the two cases that decide it in opposite
-# directions: warningShown===true with approved===false still REFUSES, while
-# approved===false with warningShown false or absent REGISTERS. It also covers
-# the rows where the approval flag is ABSENT rather than false, which is where
-# a future editor of the predicate is most likely to go wrong: warningShown
-# alone must not read as a decline, and the absent flag must stay absent. The
-# aftermath of a refusal - untouched store, unwritten worktree entry - stays
-# owned by the test above; this one owns which combination produces it.
-test_external_imports_decline_requires_the_warning_shown_field() {
-  local name entry outcome rec store out code ran=0
-  # The case table is read on fd 3, never stdin: run_trust runs git and node,
-  # and a command that consumed the loop's stdin would drop the remaining rows
-  # while the test still reported a pass. The row count is asserted below for
-  # the same reason.
-  while IFS='|' read -r name entry outcome <&3; do
-    [ -n "$name" ] || continue
-    ran=$((ran + 1))
-    rec=$(make_case "matrix-$name")
-    read_case "$rec"
-    store="$CONFIG/.claude.json"
-    cat > "$store" <<JSON
-{"hasCompletedOnboarding":true,"projects":{"$PROJ":{"hasTrustDialogAccepted":false,$entry}}}
+# Claude Code's own default project entry carries BOTH external-imports flags as
+# false before the dialog was ever shown; answering the dialog either way sets
+# hasClaudeMdExternalIncludesWarningShown to true. So false/false is "never
+# asked", not "No, disable": it must be treated like an absent flag - trust
+# registered, no import consent manufactured - rather than refused.
+test_project_root_entry_default_import_flags_are_not_a_decline() {
+  local rec store out
+  rec=$(make_case project-default-flags)
+  read_case "$rec"
+  store="$CONFIG/.claude.json"
+  cat > "$store" <<JSON
+{"hasCompletedOnboarding":true,"projects":{"$PROJ":{"allowedTools":[],"mcpContextUris":[],"mcpServers":{},"enabledMcpjsonServers":[],"disabledMcpjsonServers":[],"hasTrustDialogAccepted":false,"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":false}}}
 JSON
-    out=$(run_trust "$CONFIG" "$WT" "$PROJ") && code=0 || code=$?
-    case $outcome in
-      refuse)
-        expect_code 1 "$code" "[$name] a genuine decline must still be refused: $out"
-        assert_contains "$out" "declined external CLAUDE.md imports" \
-          "[$name] the refusal did not name the declined-consent reason"
-        assert_not_trusted "$store" "$WT" \
-          "[$name] the worktree entry was registered despite the refusal"
-        ;;
-      register-trust-only)
-        expect_code 0 "$code" "[$name] a project the dialog was never shown for must still register: $out"
-        assert_trusted "$store" "$WT" "[$name] the worktree entry did not gain trust"
-        assert_trusted "$store" "$PROJ" "[$name] the project-root entry did not gain trust"
-        assert_trust_only_no_import_consent "$store" "$PROJ" \
-          "[$name] the project-root entry gained import consent it was never asked for"
-        assert_trust_only_no_import_consent "$store" "$WT" \
-          "[$name] the worktree entry gained import consent the project never granted"
-        # Reading never-asked correctly must not turn into rewriting it: the
-        # field keeps the value it had, so the human still meets the dialog in
-        # their own interactive session.
-        assert_store_value "$store" 'false' \
-          "[$name] the never-asked approval flag was cleared or migrated instead of left alone" \
-          projects "$PROJ" hasClaudeMdExternalIncludesApproved
-        ;;
-      register-with-consent)
-        expect_code 0 "$code" "[$name] a project that already said yes must register: $out"
-        assert_all_flags "$store" "$PROJ" \
-          "[$name] the project-root entry lost its own already-granted import consent"
-        assert_all_flags "$store" "$WT" \
-          "[$name] the worktree entry did not carry the refreshed import consent"
-        ;;
-      register-approved-absent)
-        expect_code 0 "$code" "[$name] an entry with no approval flag at all must register: $out"
-        assert_trusted "$store" "$WT" "[$name] the worktree entry did not gain trust"
-        assert_trusted "$store" "$PROJ" "[$name] the project-root entry did not gain trust"
-        # Only the worktree entry is asserted trust-only here. The project
-        # entry may legitimately already carry warningShown, which this script
-        # must leave exactly as it found it, so the blanket
-        # assert_trust_only_no_import_consent would be asserting the wrong
-        # property on it.
-        assert_trust_only_no_import_consent "$store" "$WT" \
-          "[$name] the worktree entry gained import consent the project never granted"
-        # A warningShown===true with no approval flag must not read as a
-        # decline, and the absent flag must STAY absent: inventing
-        # approved===false here would fabricate half of the pair this predicate
-        # reads, turning a never-answered entry into a future decline.
-        assert_store_value "$store" 'undefined' \
-          "[$name] the registration invented an approval flag that was never there" \
-          projects "$PROJ" hasClaudeMdExternalIncludesApproved
-        ;;
-      *) fail "[$name] unknown expected outcome '$outcome'" ;;
-    esac
-  done 3<<'CASES'
-declined|"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":true|refuse
-never-asked-shown-false|"hasClaudeMdExternalIncludesApproved":false,"hasClaudeMdExternalIncludesWarningShown":false|register-trust-only
-never-asked-shown-absent|"hasClaudeMdExternalIncludesApproved":false|register-trust-only
-approved-shown-true|"hasClaudeMdExternalIncludesApproved":true,"hasClaudeMdExternalIncludesWarningShown":true|register-with-consent
-approved-shown-false|"hasClaudeMdExternalIncludesApproved":true,"hasClaudeMdExternalIncludesWarningShown":false|register-with-consent
-approved-absent-shown-true|"hasClaudeMdExternalIncludesWarningShown":true|register-approved-absent
-approved-absent-shown-false|"hasClaudeMdExternalIncludesWarningShown":false|register-approved-absent
-CASES
-  [ "$ran" -eq 7 ] || fail "the decline matrix covered $ran combinations, expected all 7"
-  pass "fm-claude-trust.sh: only approved===false WITH warningShown===true reads as a decline"
+  out=$(run_trust "$CONFIG" "$WT" "$PROJ")
+  expect_code 0 $? "a never-asked default entry must not be refused as a decline: $out"
+  assert_trust_only_no_import_consent "$store" "$WT" \
+    "the worktree entry either lost trust or gained unearned import consent"
+  assert_trust_only_no_import_consent "$store" "$PROJ" \
+    "the project-root entry either lost trust or gained import consent it was never asked for"
+  pass "fm-claude-trust.sh: a never-asked default external-imports pair is not treated as a decline"
 }
 
 test_registration_is_idempotent() {
@@ -894,7 +818,7 @@ test_fresh_worktree_also_trusts_the_project_root_without_import_consent
 test_registration_carries_forward_existing_import_consent
 test_project_root_entry_preserves_other_keys
 test_project_root_entry_declined_external_imports_is_not_overridden
-test_external_imports_decline_requires_the_warning_shown_field
+test_project_root_entry_default_import_flags_are_not_a_decline
 test_registration_is_idempotent
 test_primary_checkout_is_refused
 test_cdpath_cannot_defeat_the_primary_checkout_refusal
