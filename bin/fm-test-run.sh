@@ -1060,8 +1060,8 @@ run_coverage_guard() {
     return 1
   fi
   LC_ALL=C sort -u "$tmp/union_raw" >"$tmp/union"
-  missing=$(comm -23 "$tmp/all" "$tmp/union" || true)
-  extra=$(comm -13 "$tmp/all" "$tmp/union" || true)
+  missing=$(LC_ALL=C comm -23 "$tmp/all" "$tmp/union" || true)
+  extra=$(LC_ALL=C comm -13 "$tmp/all" "$tmp/union" || true)
   if [ -n "$missing" ] || [ -n "$extra" ]; then
     log "coverage guard: union of portable shards + portable serial + Herdr must equal tests/*.test.sh"
     [ -z "$missing" ] || { log "missing from union:"; printf '%s\n' "$missing" >&2; }

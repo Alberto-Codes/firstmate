@@ -1829,7 +1829,7 @@ An exported `TREEHOUSE_ROOT` never reaches the task pane because the spawn sends
 Verified 2026-09-16 against the same v2.3.0 binary, on a scratch pool whose root is reached through a symlinked parent.
 `tests/fm-treehouse-pool-root.test.sh` uses physical paths throughout and does not pin this rule; the commands below re-measure it, and `tests/fm-teardown.test.sh` pins Firstmate's side of it portably against a stub that models the matching rule.
 
-A return matches its path argument against the spelling the pool registered in `treehouse-state.json`, after lexical cleaning only: a relative path is made absolute and `//`, `/./`, and a trailing slash are accepted, but symlinks are never resolved.
+A return matches its path argument against the spelling the pool registered in `treehouse-state.json`, after lexical cleaning only: `//`, `/./`, and a trailing slash are accepted, but symlinks are never resolved.
 The registered spelling is whatever `--root` was given, so a pool root reached through a symlink registers the symlinked spelling and accepts only that form, while the same pool created under the physical root accepts only the physical form.
 Either mismatch fails exactly like a path in no pool, with `not managed by treehouse` and exit 1, so the refusal alone does not distinguish a foreign worktree from a differently spelled slot.
 

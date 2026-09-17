@@ -1377,8 +1377,7 @@ fm_treehouse_slot_owner_release() {  # <worktree> <task-id>
 #
 # Treehouse matches a return path against the spellings its pool registered
 # after only lexical cleaning - it collapses doubled slashes, "/./" segments,
-# and a trailing slash, and makes a relative path absolute, but it never
-# resolves symlinks. Every worktree path Firstmate captures is physical instead:
+# and a trailing slash, but it never resolves symlinks. Every worktree path Firstmate captures is physical instead:
 # a pane's OS-level cwd read at spawn, or `pwd -P`. Wherever the pool was
 # registered through a symlinked component, the two disagree and `treehouse
 # return` rejects the physical form as "not managed by treehouse" - which on a
