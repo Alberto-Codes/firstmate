@@ -1,0 +1,19 @@
+sandbox: /var/tmp/fm-live-sb.9cGQDE
+registered spelling : (none - no pool registry)
+recorded  spelling  : /var/tmp/fm-live-sb.9cGQDE/real-home/plain-wt
+==============================================================
+SCENARIO   : non-pool-worktree
+fm root    : /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2PETAP8GN30XSJT94J2616Q
+registered : (none - no pool registry)
+recorded   : /var/tmp/fm-live-sb.9cGQDE/real-home/plain-wt
+== running: bin/fm-teardown.sh task-x1 ==
+worktree /var/tmp/fm-live-sb.9cGQDE/real-home/plain-wt is not managed by treehouse
+error: treehouse return failed for worktree /var/tmp/fm-live-sb.9cGQDE/real-home/plain-wt; teardown aborted
+== teardown exit code: 1 ==
+== treehouse invocations made by teardown ==
+treehouse return --force /var/tmp/fm-live-sb.9cGQDE/real-home/plain-wt
+== pool registration after teardown ==
+(no pool registry)
+== task record ==
+task-x1.meta STILL PRESENT (teardown did not complete)
+==============================================================

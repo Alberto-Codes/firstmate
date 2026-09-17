@@ -1,0 +1,19 @@
+sandbox: /var/tmp/fm-seed-sb.ojfjoX
+== setup: first seed of dash leases a pool slot and succeeds ==
+scaffolded: /var/tmp/fm-seed-sb.ojfjoX/parent-home/data/dash/brief.md (secondmate charter)
+warning: remote HEAD refers to nonexistent ref, unable to checkout
+home=/var/tmp/fm-seed-sb.ojfjoX/real-home/.th/.treehouse/fmrepo-f55ad1/1/fmrepo
+   (setup exit: 0)
+== running: bin/fm-home-seed.sh dash - alpha  (second time: id already registered) ==
+🌳 Setting up worktree...
+🌳 Leased worktree at /var/tmp/fm-seed-sb.ojfjoX/link-home/.th/.treehouse/fmrepo-f55ad1/2/fmrepo. Run 'treehouse return /var/tmp/fm-seed-sb.ojfjoX/link-home/.th/.treehouse/fmrepo-f55ad1/2/fmrepo' to release it.
+error: secondmate id dash is already registered to home /var/tmp/fm-seed-sb.ojfjoX/real-home/.th/.treehouse/fmrepo-f55ad1/1/fmrepo; retire it before assigning /var/tmp/fm-seed-sb.ojfjoX/real-home/.th/.treehouse/fmrepo-f55ad1/2/fmrepo
+worktree /var/tmp/fm-seed-sb.ojfjoX/real-home/.th/.treehouse/fmrepo-f55ad1/2/fmrepo is not managed by treehouse
+warning: failed to return treehouse-acquired home /var/tmp/fm-seed-sb.ojfjoX/real-home/.th/.treehouse/fmrepo-f55ad1/2/fmrepo during seed rollback; lease may still be held
+== seed exit code: 1 ==
+== treehouse invocations made by seed ==
+treehouse get --lease --lease-holder dash
+treehouse return --force /var/tmp/fm-seed-sb.ojfjoX/real-home/.th/.treehouse/fmrepo-f55ad1/2/fmrepo
+== pool registration after rollback ==
+{"path":"/var/tmp/fm-seed-sb.ojfjoX/link-home/.th/.treehouse/fmrepo-f55ad1/1/fmrepo","leased":true,"lease_holder":"dash"}
+{"path":"/var/tmp/fm-seed-sb.ojfjoX/link-home/.th/.treehouse/fmrepo-f55ad1/2/fmrepo","leased":true,"lease_holder":"dash"}

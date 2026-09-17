@@ -1,0 +1,20 @@
+sandbox: /var/tmp/fm-live-sb.jcovVE
+registered spelling : /var/tmp/fm-live-sb.jcovVE/link-home/.th/.treehouse/project-f07539/1/project
+recorded  spelling  : /var/tmp/fm-live-sb.jcovVE/real-home/.th/.treehouse/project-f07539/1/project
+registration rewritten to: /var/tmp/fm-live-sb.jcovVE/link-home/.th/nonexistent/9/project
+==============================================================
+SCENARIO   : treehouse-rejects
+fm root    : /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2PETAP8GN30XSJT94J2616Q
+registered : /var/tmp/fm-live-sb.jcovVE/link-home/.th/nonexistent/9/project
+recorded   : /var/tmp/fm-live-sb.jcovVE/real-home/.th/.treehouse/project-f07539/1/project
+== running: bin/fm-teardown.sh task-x1 ==
+worktree /var/tmp/fm-live-sb.jcovVE/real-home/.th/.treehouse/project-f07539/1/project is not managed by treehouse
+error: treehouse return failed for worktree /var/tmp/fm-live-sb.jcovVE/real-home/.th/.treehouse/project-f07539/1/project; teardown aborted
+== teardown exit code: 1 ==
+== treehouse invocations made by teardown ==
+treehouse return --force /var/tmp/fm-live-sb.jcovVE/real-home/.th/.treehouse/project-f07539/1/project
+== pool registration after teardown ==
+{"path":"/var/tmp/fm-live-sb.jcovVE/link-home/.th/nonexistent/9/project","leased":true}
+== task record ==
+task-x1.meta STILL PRESENT (teardown did not complete)
+==============================================================

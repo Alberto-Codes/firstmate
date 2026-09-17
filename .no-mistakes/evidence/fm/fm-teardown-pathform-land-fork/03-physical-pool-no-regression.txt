@@ -1,0 +1,21 @@
+sandbox: /var/tmp/fm-live-sb.q6CqNj
+registered spelling : /var/tmp/fm-live-sb.q6CqNj/real-home/.th/.treehouse/project-1964d1/1/project
+recorded  spelling  : /var/tmp/fm-live-sb.q6CqNj/real-home/.th/.treehouse/project-1964d1/1/project
+==============================================================
+SCENARIO   : physical-pool
+fm root    : /home/Alberto-Codes/.no-mistakes/worktrees/d58a82b70cc7/01M2PETAP8GN30XSJT94J2616Q
+registered : /var/tmp/fm-live-sb.q6CqNj/real-home/.th/.treehouse/project-1964d1/1/project
+recorded   : /var/tmp/fm-live-sb.q6CqNj/real-home/.th/.treehouse/project-1964d1/1/project
+== running: bin/fm-teardown.sh task-x1 ==
+🌳 Worktree returned to pool.
+/var/tmp/fm-live-sb.q6CqNj/project: already current
+teardown task-x1 complete (window firstmate:fm-task-x1, worktree /var/tmp/fm-live-sb.q6CqNj/real-home/.th/.treehouse/project-1964d1/1/project)
+Backlog: task-x1 just finished (this home keeps no markdown backlog at /var/tmp/fm-live-sb.q6CqNj/data/backlog.md). Update /var/tmp/fm-live-sb.q6CqNj/data/backlog.md - move task-x1 to Done, keep Done to the 10 most recent, then re-scan Queued and dispatch only work whose blockers are gone and date is due.
+== teardown exit code: 0 ==
+== treehouse invocations made by teardown ==
+treehouse return --force /var/tmp/fm-live-sb.q6CqNj/real-home/.th/.treehouse/project-1964d1/1/project
+== pool registration after teardown ==
+{"path":"/var/tmp/fm-live-sb.q6CqNj/real-home/.th/.treehouse/project-1964d1/1/project","leased":null}
+== task record ==
+task-x1.meta removed (teardown completed)
+==============================================================

@@ -1,0 +1,7 @@
+60:ok - a slot registered under its symlinked spelling is returned under that spelling
+61:ok - a slot registered under its physical spelling is returned under that spelling
+62:ok - a slot the pool does not register is handed to treehouse byte-identical
+63:ok - a worktree with no pool registry is returned unchanged
+64:ok - a return treehouse rejects keeps the loud failure instead of silently dropping the lease
+tests/fm-teardown.test.sh   -> exit 0 (89 cases)
+tests/fm-secondmate-safety.test.sh -> exit 0 (77 cases)
