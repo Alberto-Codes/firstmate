@@ -571,10 +571,9 @@ register_pool_slots() {
 }
 
 # A `treehouse` that models the real tool's return matching rule, verified live
-# against treehouse v2.3.0: it makes its path argument absolute and cleans it
-# lexically but never resolves symlinks, then requires an exact match against the
-# one spelling its pool registered, rejecting anything else as "not managed by
-# treehouse". Teardown only ever passes an already-absolute, already-clean path,
+# against treehouse v2.3.0: it cleans its path argument lexically but never
+# resolves symlinks, then requires an exact match against the one spelling its
+# pool registered, rejecting anything else as "not managed by treehouse". Teardown only ever passes an already-absolute, already-clean path,
 # so an exact string match models it faithfully at that boundary. Every
 # invocation is logged so a test can prove which spelling was handed over, and
 # whether a return was attempted at all.
@@ -740,13 +739,16 @@ backlog_row_state() {
     sed -n 's/^  state: *//p' | head -1
 }
 
-# Build the teardown test's executable search path without lsof, regardless of
-# whether the host installs it in /usr/bin, /usr/sbin, or a package-manager bin.
-make_path_without_lsof() {  # <case-dir>
-  local case_dir=$1 path_dir="$1/path-without-lsof" cmd resolved
+# Build the teardown test's executable search path with one named tool left
+# out, regardless of whether the host installs it in /usr/bin, /usr/sbin, or a
+# package-manager bin.
+make_path_without() {  # <case-dir> <omitted-tool>
+  local case_dir=$1 omit=$2 path_dir="$1/path-without-$2" cmd resolved
   mkdir -p "$path_dir"
-  for cmd in awk bash basename cat chmod cp cut date dirname env find git grep head hostname id ln \
-    mkdir mktemp mv perl ps readlink realpath rm sed sh sleep sort stat tail timeout tr uname wc xargs; do
+  for cmd in awk bash basename cat chmod cp cut date dirname env find git grep head hostname id jq ln \
+    lsof mkdir mktemp mv perl ps readlink realpath rm sed sh sleep sort stat tail timeout tr uname wc \
+    xargs; do
+    [ "$cmd" != "$omit" ] || continue
     resolved=$(command -v "$cmd" 2>/dev/null) || continue
     case "$resolved" in /*) ln -sf "$resolved" "$path_dir/$cmd" ;; esac
   done
@@ -1940,26 +1942,16 @@ test_rejected_slot_return_still_refuses_loudly() {
 # treehouse unchanged - which on a symlinked pool root is the original jam - so
 # the missing tool has to be named, not hidden behind treehouse's own refusal.
 test_missing_jq_names_the_tool_instead_of_silently_returning_the_recorded_spelling() {
-  local case_dir rc slot link_slot pool nojq dir f name
+  local case_dir rc slot link_slot pool nojq
   case_dir=$(make_case slot-return-without-jq)
   read -r slot link_slot pool < <(make_symlinked_pool_slot "$case_dir")
   register_pool_slots "$pool" "$link_slot"
   add_spelling_matching_treehouse "$case_dir" "$link_slot"
   seed_landed_pool_slot_task "$case_dir" "$slot"
 
-  # Every tool on PATH except jq, so `command -v jq` genuinely fails.
-  nojq="$case_dir/nojq"
-  mkdir -p "$nojq"
-  IFS=: read -ra path_dirs <<< "$PATH"
-  for dir in "${path_dirs[@]}"; do
-    [ -d "$dir" ] || continue
-    for f in "$dir"/*; do
-      [ -x "$f" ] && [ ! -d "$f" ] || continue
-      name=${f##*/}
-      [ "$name" != jq ] && [ ! -e "$nojq/$name" ] || continue
-      ln -s "$f" "$nojq/$name"
-    done
-  done
+  nojq=$(make_path_without "$case_dir" jq)
+  PATH="$nojq" command -v jq >/dev/null 2>&1 \
+    && fail "no-jq: fixture path unexpectedly exposes jq"
 
   set +e
   FM_TEARDOWN_TEST_PATH="$nojq" run_teardown "$case_dir" > "$case_dir/stdout" 2> "$case_dir/stderr"
@@ -3588,7 +3580,7 @@ test_lsof_absent_reaps_tmux_process_group() {
   case_dir=$(make_case lsof-absent-process-group-reap)
   write_meta "$case_dir" no-mistakes ship
   land_shippable_commit "$case_dir"
-  path_without_lsof=$(make_path_without_lsof "$case_dir")
+  path_without_lsof=$(make_path_without "$case_dir" lsof)
   PATH="$path_without_lsof" command -v lsof >/dev/null 2>&1 \
     && fail "lsof-absent-process-group-reap: fixture path unexpectedly exposes lsof"
 
