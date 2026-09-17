@@ -757,6 +757,7 @@ tests/fm-remote-secondmate-lifecycle-e2e.test.sh 209631
 tests/fm-remote-secondmate-parent-binding.test.sh 29562
 tests/fm-remote-secondmate-trace-context.test.sh 67096
 tests/fm-remote-transport-lanes.test.sh 63976
+tests/fm-runpod-watchdog.test.sh 78306
 tests/fm-secondmate-harness.test.sh 151589
 tests/fm-secondmate-lifecycle-e2e.test.sh 8793
 tests/fm-secondmate-liveness.test.sh 18146
@@ -778,6 +779,7 @@ tests/fm-sessionstart-nudge.test.sh 66194
 tests/fm-shared-captain-inheritance.test.sh 6108
 tests/fm-spawn-dispatch-profile.test.sh 63996
 tests/fm-spawn-pool-base-freshen.test.sh 34920
+tests/fm-spawn-pool-home.test.sh 10182
 tests/fm-spawn-worktree-settle.test.sh 5687
 tests/fm-startup-memory-budget.test.sh 6964
 tests/fm-startup-network.test.sh 62274
@@ -796,6 +798,7 @@ tests/fm-tmux-agent-liveness.test.sh 1516
 tests/fm-tool-update-check.test.sh 14176
 tests/fm-trace-context-lib.test.sh 209
 tests/fm-trace-context-spawn.test.sh 44702
+tests/fm-treehouse-pool-root.test.sh 671
 tests/fm-turnend-guard.test.sh 42565
 tests/fm-update.test.sh 5212
 tests/fm-vendor-auth-probe.test.sh 43316
