@@ -1249,16 +1249,25 @@ fm_treehouse_project_lock_path() {  # <project-dir>
   printf '%s/.treehouse-project-%s.lock\n' "$root/state" "$hash"
 }
 
-# A Treehouse slot has the managed pool's fixed <pool>/<slot>/<repo> layout.
-# Require both its pool state and the same Git common directory as the recorded
-# project; an ordinary linked worktree is not evidence that Treehouse owns it.
+# The pool state file that registers a treehouse pool slot, given the slot's
+# resolved path. A managed pool has the fixed <pool>/<slot>/<repo> layout with
+# its registry at the pool root; a plain symlink there is not a pool registry.
+fm_treehouse_pool_state_file() {  # <resolved-slot-dir>
+  local state
+  state="$(dirname "$(dirname "$1")")/treehouse-state.json"
+  [ -f "$state" ] && [ ! -L "$state" ] || return 1
+  printf '%s\n' "$state"
+}
+
+# Require both a pool registry (the managed-pool layout is owned by
+# fm_treehouse_pool_state_file) and the same Git common directory as the
+# recorded project; an ordinary linked worktree is not evidence that Treehouse
+# owns it.
 fm_treehouse_pool_slot() {  # <project-dir> <worktree>
-  local project=$1 worktree=$2 slot pool state project_common slot_common
+  local project=$1 worktree=$2 slot project_common slot_common
   [ -d "$project" ] && [ -d "$worktree" ] || return 1
   slot=$(CDPATH='' cd -- "$worktree" 2>/dev/null && pwd -P) || return 1
-  pool=$(dirname "$(dirname "$slot")")
-  state="$pool/treehouse-state.json"
-  [ -f "$state" ] && [ ! -L "$state" ] || return 1
+  fm_treehouse_pool_state_file "$slot" >/dev/null || return 1
   project_common=$(git -C "$project" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return 1
   slot_common=$(git -C "$slot" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return 1
   project_common=$(CDPATH='' cd -- "$project_common" 2>/dev/null && pwd -P) || return 1
@@ -1362,6 +1371,56 @@ fm_treehouse_slot_owner_release() {  # <worktree> <task-id>
   [ "$FM_TREEHOUSE_SLOT_OWNER" = mine ] || return 0
   marker=$(fm_treehouse_slot_owner_marker "$worktree") || return 0
   rm -f "$marker" 2>/dev/null || true
+}
+
+# The path spelling `treehouse return` accepts for a pool slot.
+#
+# Treehouse matches a return path against the spellings its pool registered
+# after only lexical cleaning - it collapses doubled slashes, "/./" segments,
+# and a trailing slash, but it never resolves symlinks. Every worktree path
+# Firstmate captures is physical instead: a pane's OS-level cwd read at spawn,
+# or `pwd -P`. Wherever the pool was registered through a symlinked component,
+# the two disagree and `treehouse return` rejects the physical form as "not
+# managed by treehouse" - which on a bootc host, where /home is a symlink to
+# /var/home and the pool root is $HOME-rooted, is every pooled slot.
+#
+# So the spelling comes from the registration itself: the pool's
+# treehouse-state.json is the record treehouse matches against, and the entry
+# whose path resolves to the same directory as the slot is by definition the
+# spelling it will accept. Reading the registration - rather than assuming where
+# the pool root is rooted - is also what makes a symlinked pool root work: the
+# registry is located through the slot's resolved path, and each registered
+# spelling is compared after the same resolution.
+#
+# A path with no pool registry, or none registering it, is passed through
+# byte-identical rather than guessed at. A registry that cannot be read also
+# passes the path through, but never quietly: a missing jq is named here on
+# stderr, and a registry jq rejects leaves jq's own parse error there.
+#
+# Always prints a path and succeeds; the return itself stays responsible for
+# reporting failure, and nothing here treats a non-rewritten path as evidence
+# that the slot has already been reclaimed.
+fm_treehouse_return_path() {  # <slot-dir>
+  local dir=$1 slot state registered resolved
+  slot=$(CDPATH='' cd -- "$dir" 2>/dev/null && pwd -P) || { printf '%s\n' "$dir"; return 0; }
+  state=$(fm_treehouse_pool_state_file "$slot") || { printf '%s\n' "$dir"; return 0; }
+  # A registry that cannot be read must not look like "no registry": say why the
+  # recorded spelling is being handed over unchanged, so a refusal that follows
+  # is diagnosable rather than a silent return of the original jam.
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "warning: jq not found; cannot read the treehouse pool registry $state, so $dir is returned under its recorded spelling" >&2
+    printf '%s\n' "$dir"
+    return 0
+  fi
+  while IFS= read -r registered; do
+    [ -n "$registered" ] || continue
+    resolved=$(CDPATH='' cd -- "$registered" 2>/dev/null && pwd -P) || continue
+    if [ "$resolved" = "$slot" ]; then
+      printf '%s\n' "$registered"
+      return 0
+    fi
+  done < <(jq -r '.worktrees[]?.path // empty' "$state")
+  printf '%s\n' "$dir"
 }
 
 fm_failure_episode_reset() {

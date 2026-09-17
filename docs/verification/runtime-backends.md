@@ -1775,7 +1775,8 @@ FM_HARNESS_LIVENESS_DRIFT=1 bin/fm-test-run.sh tests/fm-harness-liveness-drift-l
 ## Treehouse pool root
 
 Verified 2026-09-11 against treehouse v2.3.0 on Linux, from a scratch bare origin with two clones of it, both named `proj`, under different parents.
-Refresh with `bin/fm-test-run.sh tests/fm-treehouse-pool-root.test.sh`, which pins every fact below against the installed binary and skips only when treehouse is absent.
+Refresh with `bin/fm-test-run.sh tests/fm-treehouse-pool-root.test.sh`, which pins every pool-root and `--root` fact below against the installed binary and skips only when treehouse is absent.
+"The return path spelling" is measured by hand and carries its own refresh commands and date.
 
 The pool key inside a root is the clone's directory basename plus the first six hex digits of sha256 over the origin URL string exactly as `git remote get-url origin` prints it, under `<root>/.treehouse/`, and the root defaults to `$HOME`.
 
@@ -1808,6 +1809,7 @@ $S/homeB/proj/.git
 ```
 
 `treehouse return` resolves the pool from the slot path, so `bin/fm-teardown.sh` passes no root and a slot allocated under the old shared root still returns; a path in no pool is refused with exit 1.
+Which spelling of an in-pool slot path it accepts is a separate rule, measured in "The return path spelling" below.
 
 ```
 $ (cd homeB/proj && treehouse return --force "$S/RB/.treehouse/proj-83d8e9/1/proj"; echo "exit=$?")
@@ -1821,6 +1823,37 @@ exit=1
 ```
 
 An exported `TREEHOUSE_ROOT` never reaches the task pane because the spawn sends command text, not environment, and an empty pool under a fresh root is indistinguishable from a relocated one by listing alone; every check above therefore reads the common dir of the worktree actually handed out.
+
+### The return path spelling
+
+Verified 2026-09-16 against the same v2.3.0 binary, on a scratch pool whose root is reached through a symlinked parent.
+`tests/fm-treehouse-pool-root.test.sh` uses physical paths throughout and does not pin this rule; the commands below re-measure it, and `tests/fm-teardown.test.sh` pins Firstmate's side of it portably against a stub that models the matching rule.
+
+A return matches its path argument against the spelling the pool registered in `treehouse-state.json`, after lexical cleaning only: `//`, `/./`, and a trailing slash are accepted, but symlinks are never resolved.
+The registered spelling is whatever `--root` was given, so a pool root reached through a symlink registers the symlinked spelling and accepts only that form, while the same pool created under the physical root accepts only the physical form.
+Either mismatch fails exactly like a path in no pool, with `not managed by treehouse` and exit 1, so the refusal alone does not distinguish a foreign worktree from a differently spelled slot.
+
+Every Firstmate return therefore derives the spelling from the registration rather than from the recorded worktree, because task records hold a physically resolved path - a pane cwd read at spawn, or `pwd -P` - and on a host where `/home` is a symlink to `/var/home` that is never the `$HOME`-rooted spelling the pool registered.
+`bin/fm-wake-lib.sh`'s `fm_treehouse_return_path` owns that derivation and the passthrough for a path no pool registers, and every caller goes through it: `bin/fm-teardown.sh`'s one return helper, which serves both a task worktree and a retired secondmate's leased home, and `bin/fm-home-seed.sh`'s seed rollback of a leased home.
+
+```
+$ ln -s real "$S/link"   # $S/proj is a scratch clone; $S/real/root and $S/link/root are one directory
+$ (cd "$S/proj" && treehouse get --lease --no-fetch --root "$S/link/root" --lease-holder V)
+$S/link/root/.treehouse/proj-fb4e8f/1/proj
+$ jq -r '.worktrees[].path' "$S/real/root/.treehouse/proj-fb4e8f/treehouse-state.json"
+$S/link/root/.treehouse/proj-fb4e8f/1/proj
+$ (cd "$S/proj" && treehouse return --force "$S/real/root/.treehouse/proj-fb4e8f/1/proj"; echo "exit=$?")
+worktree $S/real/root/.treehouse/proj-fb4e8f/1/proj is not managed by treehouse
+exit=1
+$ (cd "$S/proj" && treehouse return --force "$S/link/root/.treehouse/proj-fb4e8f//1/./proj/"; echo "exit=$?")
+🌳 Worktree returned to pool.
+exit=0
+$ (cd "$S/proj" && treehouse get --lease --no-fetch --root "$S/real/root2" --lease-holder V2)
+$S/real/root2/.treehouse/proj-fb4e8f/1/proj
+$ (cd "$S/proj" && treehouse return --force "$S/link/root2/.treehouse/proj-fb4e8f/1/proj"; echo "exit=$?")
+worktree $S/link/root2/.treehouse/proj-fb4e8f/1/proj is not managed by treehouse
+exit=1
+```
 
 ### The `--root` floor, measured rather than inferred
 

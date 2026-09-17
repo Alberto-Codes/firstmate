@@ -58,6 +58,7 @@ Each shard is still strictly serial in itself, and separate runners mean no two 
 
 Assignment is longest-processing-time bin packing over per-script duration hints embedded in `bin/fm-test-run.sh`.
 The embedded hints include the slowest measurements retained from the `fm-test-timing-portable-serial-*` artifacts of three green CI runs on 2026-09-01, [33558082172](https://github.com/kunchenguid/firstmate/actions/runs/33558082172), [33523597838](https://github.com/kunchenguid/firstmate/actions/runs/33523597838), and [33463326167](https://github.com/kunchenguid/firstmate/actions/runs/33463326167), the completed-script measurements from [run 34342484144](https://github.com/kunchenguid/firstmate/actions/runs/34342484144), plus the 5121 ms native-Windows focused runner measurement for `tests/fm-pi-windows-shell-invocation.test.sh` from 2026-09-06T21:02Z.
+The hints for `tests/fm-runpod-watchdog.test.sh`, `tests/fm-spawn-pool-home.test.sh`, and `tests/fm-treehouse-pool-root.test.sh` are the slowest completed `duration_ms` each script reached across the `fm-test-timing-portable-serial-*` artifacts of three fork CI runs on 2026-09-14 through 2026-09-17, [34868056009](https://github.com/Alberto-Codes/firstmate/actions/runs/34868056009), [35056233688](https://github.com/Alberto-Codes/firstmate/actions/runs/35056233688), and [35168604067](https://github.com/Alberto-Codes/firstmate/actions/runs/35168604067); those runs failed only this coverage guard, which those three unmeasured scripts had pushed past its bound, while every serial shard completed with the scripts themselves passing.
 Taking the slowest of several CI runs rather than a single run keeps the balance honest on a slow runner.
 A script with no hint gets the conservative `PORTABLE_SERIAL_DEFAULT_WEIGHT_MS` default.
 Hints only affect balance: the coverage guard keeps the partition complete and disjoint whatever they say, so a stale hint costs a slower shard rather than lost coverage.
@@ -74,8 +75,9 @@ The single longest script, `tests/fm-watch-triage.test.sh` at 262626 ms, is the 
 Refresh the CI-derived hints by downloading the per-shard timing artifacts from several green CI runs and replacing the `portable_serial_weight_hints` table in `bin/fm-test-run.sh` with the slowest measured `duration_ms` per `path`:
 
 ```sh
+repo=Alberto-Codes/firstmate   # the repository whose Actions produced the runs
 for run in <run-id> <run-id> <run-id>; do
-  gh run download "$run" -R kunchenguid/firstmate --pattern 'fm-test-timing-portable-serial-*' -D "/tmp/fm-serial/$run"
+  gh run download "$run" -R "$repo" --pattern 'fm-test-timing-portable-serial-*' -D "/tmp/fm-serial/$run"
 done
 jq -r '.scripts[] | [.path, .duration_ms] | @tsv' /tmp/fm-serial/*/*.json \
   | awk -F'\t' '$2 > m[$1] { m[$1] = $2 } END { for (p in m) print p, m[p] }' \
