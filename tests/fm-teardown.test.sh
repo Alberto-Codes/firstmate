@@ -551,8 +551,8 @@ make_symlinked_pool_slot() {
   slot="$pool/1/repo"
   mkdir -p "$pool"
 
-  # is_treehouse_pool_slot proves ownership from the pool layout plus a shared git
-  # common dir, so the slot has to be a genuine linked worktree of the project.
+  # fm_treehouse_pool_slot proves ownership from the pool layout plus a shared
+  # git common dir, so the slot has to be a genuine linked worktree of the project.
   git -C "$case_dir/project" worktree remove --force "$case_dir/wt"
   git -C "$case_dir/project" worktree add -q "$slot" fm/task-x1
 
@@ -1934,6 +1934,48 @@ test_rejected_slot_return_still_refuses_loudly() {
   [ -f "$case_dir/state/task-x1.meta" ] \
     || fail "rejected-return: teardown discarded the task record despite a failed return"
   pass "a return treehouse rejects keeps the loud failure instead of silently dropping the lease"
+}
+
+# The registry lookup needs jq. Without it the recorded spelling is handed to
+# treehouse unchanged - which on a symlinked pool root is the original jam - so
+# the missing tool has to be named, not hidden behind treehouse's own refusal.
+test_missing_jq_names_the_tool_instead_of_silently_returning_the_recorded_spelling() {
+  local case_dir rc slot link_slot pool nojq dir f name
+  case_dir=$(make_case slot-return-without-jq)
+  read -r slot link_slot pool < <(make_symlinked_pool_slot "$case_dir")
+  register_pool_slots "$pool" "$link_slot"
+  add_spelling_matching_treehouse "$case_dir" "$link_slot"
+  seed_landed_pool_slot_task "$case_dir" "$slot"
+
+  # Every tool on PATH except jq, so `command -v jq` genuinely fails.
+  nojq="$case_dir/nojq"
+  mkdir -p "$nojq"
+  IFS=: read -ra path_dirs <<< "$PATH"
+  for dir in "${path_dirs[@]}"; do
+    [ -d "$dir" ] || continue
+    for f in "$dir"/*; do
+      [ -x "$f" ] && [ ! -d "$f" ] || continue
+      name=${f##*/}
+      [ "$name" != jq ] && [ ! -e "$nojq/$name" ] || continue
+      ln -s "$f" "$nojq/$name"
+    done
+  done
+
+  set +e
+  FM_TEARDOWN_TEST_PATH="$nojq" run_teardown "$case_dir" > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "no-jq: an unreadable registry must not be reported as a completed return"
+  assert_grep "jq not found" "$case_dir/stderr" \
+    "no-jq: teardown did not name the missing tool"
+  assert_grep "return --force $slot" "$case_dir/treehouse.log" \
+    "no-jq: the recorded spelling was not the one handed to treehouse"
+  assert_grep "not managed by treehouse" "$case_dir/stderr" \
+    "no-jq: treehouse's refusal was swallowed"
+  [ -f "$case_dir/state/task-x1.meta" ] \
+    || fail "no-jq: teardown discarded the task record despite a failed return"
+  pass "a missing jq is named instead of silently returning the recorded spelling"
 }
 
 test_empty_retry_wait_uses_default_without_aborting() {
@@ -3931,6 +3973,7 @@ test_slot_registered_under_physical_spelling_is_returned_that_way
 test_slot_the_pool_does_not_register_is_passed_through_byte_identical
 test_worktree_without_a_pool_registry_is_returned_unchanged
 test_rejected_slot_return_still_refuses_loudly
+test_missing_jq_names_the_tool_instead_of_silently_returning_the_recorded_spelling
 test_fractional_legacy_retry_wait_refuses_without_arithmetic_error
 test_parked_own_run_is_aborted_before_teardown
 test_parked_run_advanced_past_unfetched_head_is_still_aborted

@@ -1394,7 +1394,9 @@ fm_treehouse_slot_owner_release() {  # <worktree> <task-id>
 # spelling is compared after the same resolution.
 #
 # A path with no pool registry, or none registering it, is passed through
-# byte-identical rather than guessed at.
+# byte-identical rather than guessed at. A registry that cannot be read - jq
+# missing, or a registry jq rejects - also passes the path through, but says so
+# on stderr first.
 #
 # Always prints a path and succeeds; the return itself stays responsible for
 # reporting failure, and nothing here treats a non-rewritten path as evidence
@@ -1403,6 +1405,14 @@ fm_treehouse_return_path() {  # <slot-dir>
   local dir=$1 slot state registered resolved
   slot=$(CDPATH='' cd -- "$dir" 2>/dev/null && pwd -P) || { printf '%s\n' "$dir"; return 0; }
   state=$(fm_treehouse_pool_state_file "$slot") || { printf '%s\n' "$dir"; return 0; }
+  # A registry that cannot be read must not look like "no registry": say why the
+  # recorded spelling is being handed over unchanged, so a refusal that follows
+  # is diagnosable rather than a silent return of the original jam.
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "warning: jq not found; cannot read the treehouse pool registry $state, so $dir is returned under its recorded spelling" >&2
+    printf '%s\n' "$dir"
+    return 0
+  fi
   while IFS= read -r registered; do
     [ -n "$registered" ] || continue
     resolved=$(CDPATH='' cd -- "$registered" 2>/dev/null && pwd -P) || continue
@@ -1410,7 +1420,7 @@ fm_treehouse_return_path() {  # <slot-dir>
       printf '%s\n' "$registered"
       return 0
     fi
-  done < <(jq -r '.worktrees[]?.path // empty' "$state" 2>/dev/null)
+  done < <(jq -r '.worktrees[]?.path // empty' "$state")
   printf '%s\n' "$dir"
 }
 
