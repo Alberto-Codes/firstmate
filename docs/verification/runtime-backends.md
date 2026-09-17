@@ -1834,7 +1834,7 @@ The registered spelling is whatever `--root` was given, so a pool root reached t
 Either mismatch fails exactly like a path in no pool, with `not managed by treehouse` and exit 1, so the refusal alone does not distinguish a foreign worktree from a differently spelled slot.
 
 Every Firstmate return therefore derives the spelling from the registration rather than from the recorded worktree, because task records hold a physically resolved path - a pane cwd read at spawn, or `pwd -P` - and on a host where `/home` is a symlink to `/var/home` that is never the `$HOME`-rooted spelling the pool registered.
-`bin/fm-wake-lib.sh`'s `fm_treehouse_return_path` owns that derivation and the passthrough for a path no pool registers, and both callers go through it: `bin/fm-teardown.sh`'s worktree return and `bin/fm-home-seed.sh`'s seed rollback of a leased home.
+`bin/fm-wake-lib.sh`'s `fm_treehouse_return_path` owns that derivation and the passthrough for a path no pool registers, and every caller goes through it: `bin/fm-teardown.sh`'s one return helper, which serves both a task worktree and a retired secondmate's leased home, and `bin/fm-home-seed.sh`'s seed rollback of a leased home.
 
 ```
 $ ln -s real "$S/link"   # $S/proj is a scratch clone; $S/real/root and $S/link/root are one directory

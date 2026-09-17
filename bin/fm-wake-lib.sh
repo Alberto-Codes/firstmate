@@ -1377,12 +1377,12 @@ fm_treehouse_slot_owner_release() {  # <worktree> <task-id>
 #
 # Treehouse matches a return path against the spellings its pool registered
 # after only lexical cleaning - it collapses doubled slashes, "/./" segments,
-# and a trailing slash, but it never resolves symlinks. Every worktree path Firstmate captures is physical instead:
-# a pane's OS-level cwd read at spawn, or `pwd -P`. Wherever the pool was
-# registered through a symlinked component, the two disagree and `treehouse
-# return` rejects the physical form as "not managed by treehouse" - which on a
-# bootc host, where /home is a symlink to /var/home and the pool root is $HOME-
-# rooted, is every pooled slot.
+# and a trailing slash, but it never resolves symlinks. Every worktree path
+# Firstmate captures is physical instead: a pane's OS-level cwd read at spawn,
+# or `pwd -P`. Wherever the pool was registered through a symlinked component,
+# the two disagree and `treehouse return` rejects the physical form as "not
+# managed by treehouse" - which on a bootc host, where /home is a symlink to
+# /var/home and the pool root is $HOME-rooted, is every pooled slot.
 #
 # So the spelling comes from the registration itself: the pool's
 # treehouse-state.json is the record treehouse matches against, and the entry
@@ -1393,9 +1393,9 @@ fm_treehouse_slot_owner_release() {  # <worktree> <task-id>
 # spelling is compared after the same resolution.
 #
 # A path with no pool registry, or none registering it, is passed through
-# byte-identical rather than guessed at. A registry that cannot be read - jq
-# missing, or a registry jq rejects - also passes the path through, but says so
-# on stderr first.
+# byte-identical rather than guessed at. A registry that cannot be read also
+# passes the path through, but never quietly: a missing jq is named here on
+# stderr, and a registry jq rejects leaves jq's own parse error there.
 #
 # Always prints a path and succeeds; the return itself stays responsible for
 # reporting failure, and nothing here treats a non-rewritten path as evidence
