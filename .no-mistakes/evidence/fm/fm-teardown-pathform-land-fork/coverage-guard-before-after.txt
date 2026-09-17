@@ -1,0 +1,22 @@
+# bin/fm-test-run.sh --check-coverage on this host (LANG=en_US.UTF-8 dictionary collation)
+
+== BEFORE: base 9dd0ce6 script, host locale ==
+comm: file 2 is not in sorted order
+comm: input is not in sorted order
+exit=1
+
+== BEFORE: base 9dd0ce6 script under C collation (what GitHub runners use) ==
+fm-test-run: coverage guard: 28 of 176 portable serial scripts have no measured duration hint (max 15%)
+fm-test-run: refresh the hints from a green run's timing artifacts: docs/fm-test-portable-shards.md
+tests/fm-backlog-read-bound.test.sh
+tests/fm-bearings-board-lavish-live-e2e.test.sh
+  ...(28 unhinted scripts listed)
+exit=1
+
+== AFTER: branch head fe60fcb, host locale ==
+FM_TEST_COVERAGE ok total=216 parallel=24 parallel_max_ms=417163 parallel_imbalance_ms=2894 parallel_unhinted=0 serial=176 serial_shards=5 serial_unhinted=25 herdr=16
+exit=0
+
+== AFTER: branch head fe60fcb under C collation ==
+FM_TEST_COVERAGE ok total=216 parallel=24 parallel_max_ms=417163 parallel_imbalance_ms=2894 parallel_unhinted=0 serial=176 serial_shards=5 serial_unhinted=25 herdr=16
+exit=0

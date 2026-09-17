@@ -1,0 +1,16 @@
+# bin/fm-teardown.sh driven end-to-end on a pool slot registered under a symlinked spelling
+# (tests/fm-teardown.test.sh scenario z1, instrumented to print the teardown transcript)
+
+== BEFORE (base 9dd0ce6 bin/fm-teardown.sh + bin/fm-wake-lib.sh) ==
+--- teardown exit=1; teardown stderr (tail) ---
+worktree /tmp/fm-teardown-tests.EHzSVg/slot-registered-symlinked/real-home/.treehouse/proj-abc/1/repo is not managed by treehouse
+error: treehouse return failed for worktree /tmp/fm-teardown-tests.EHzSVg/slot-registered-symlinked/real-home/.treehouse/proj-abc/1/repo; teardown aborted
+--- treehouse invocations ---
+return --force /tmp/fm-teardown-tests.EHzSVg/slot-registered-symlinked/real-home/.treehouse/proj-abc/1/repo
+not ok - symlinked-registration: teardown should complete when the pool registered the symlinked spelling: expected exit 0, got 1
+
+== AFTER (branch head fe60fcb) ==
+--- teardown exit=0; teardown stderr (tail) ---
+--- treehouse invocations ---
+return --force /tmp/fm-teardown-tests.7BjIXX/slot-registered-symlinked/link-home/.treehouse/proj-abc/1/repo
+ok - a slot registered under its symlinked spelling is returned under that spelling

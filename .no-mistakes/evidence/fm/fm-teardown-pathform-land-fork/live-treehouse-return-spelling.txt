@@ -1,0 +1,19 @@
+# Live repro: treehouse v2.3.0 return-path spelling on a symlinked pool root
+$ treehouse --version
+v2.3.0
+
+## The jam (what teardown did at base 9dd0ce6: hand treehouse the physically resolved path)
+$ treehouse return --force /tmp/fm-live-treehouse.4bueJ4/real-home/.treehouse/proj/.treehouse/project-dc70ae/1/project
+worktree /tmp/fm-live-treehouse.4bueJ4/real-home/.treehouse/proj/.treehouse/project-dc70ae/1/project is not managed by treehouse
+exit=1
+
+## The fix: ask bin/fm-wake-lib.sh for the spelling the pool registered
+$ . bin/fm-wake-lib.sh; fm_treehouse_return_path /tmp/fm-live-treehouse.4bueJ4/real-home/.treehouse/proj/.treehouse/project-dc70ae/1/project
+/tmp/fm-live-treehouse.4bueJ4/link-home/.treehouse/proj/.treehouse/project-dc70ae/1/project
+
+$ treehouse return --force "$(fm_treehouse_return_path ...)"
+🌳 Worktree returned to pool.
+exit=0
+
+## Pool state after the return
+🌳 No worktrees in pool.

@@ -1,0 +1,29 @@
+# bin/fm-teardown.sh return-spelling scenarios (tests/fm-teardown.test.sh z1-z5 + missing-jq + the shared make_path_without fixture's lsof case)
+ok - a slot registered under its symlinked spelling is returned under that spelling
+ok - a slot registered under its physical spelling is returned under that spelling
+ok - a slot the pool does not register is handed to treehouse byte-identical
+ok - a worktree with no pool registry is returned unchanged
+ok - a return treehouse rejects keeps the loud failure instead of silently dropping the lease
+ok - a missing jq is named instead of silently returning the recorded spelling
+ok - missing lsof falls back to reaping the tmux pane process group
+
+# adversarial probes added for this validation run (unparseable registry, dangling registry entry)
+--- exit=1
+--- stderr (tail) ---
+jq: parse error: Invalid literal at line 1, column 7
+worktree /tmp/fm-teardown-tests.ENnyOI/adversarial-bad-registry/real-home/.treehouse/proj-abc/1/repo is not managed by treehouse
+error: treehouse return failed for worktree /tmp/fm-teardown-tests.ENnyOI/adversarial-bad-registry/real-home/.treehouse/proj-abc/1/repo; teardown aborted
+--- treehouse invocations ---
+return --force /tmp/fm-teardown-tests.ENnyOI/adversarial-bad-registry/real-home/.treehouse/proj-abc/1/repo
+ok - an unparseable pool registry keeps the loud refusal instead of a silent drop
+--- exit=0
+--- treehouse invocations ---
+return --force /tmp/fm-teardown-tests.ENnyOI/adversarial-stale-entry/link-home/.treehouse/proj-abc/1/repo
+ok - a dangling registry entry does not stop the live spelling from being found
+
+# bin/fm-home-seed.sh rollback on a symlink-registered acquired home
+--- registered spelling: /tmp/fm-secondmate-safety.UTAwoP/link-root/.treehouse/proj/1/repo
+--- rollback target resolves to: /tmp/fm-secondmate-safety.UTAwoP/real-root/.treehouse/proj/1/repo
+--- treehouse invocations ---
+treehouse return --force /tmp/fm-secondmate-safety.UTAwoP/link-root/.treehouse/proj/1/repo
+ok - seed rollback returns a symlink-registered acquired home under its registered spelling

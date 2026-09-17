@@ -1,0 +1,11 @@
+# Real host pool on this machine (read-only: no treehouse return is issued)
+$ ls -ld /home
+lrwxrwxrwx. 1 root root 8 Dec 31  1969 /home -> var/home
+
+registered spelling in the pool's treehouse-state.json:
+/home/Alberto-Codes/.treehouse/firstmate-b8697d/3/firstmate
+spelling Firstmate records for the same directory (pwd -P):
+/var/home/Alberto-Codes/.treehouse/firstmate-b8697d/3/firstmate
+
+$ fm_treehouse_return_path /var/home/Alberto-Codes/.treehouse/firstmate-b8697d/3/firstmate
+/home/Alberto-Codes/.treehouse/firstmate-b8697d/3/firstmate
